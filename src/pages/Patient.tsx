@@ -39,24 +39,43 @@ export function Home() {
       title={`Olá, ${profile!.name.split(" ")[0]}`}
       subtitle="Como podemos ajudar hoje?"
     >
+      <div className="section-heading">
+        <div>
+          <h2>Qual especialidade você procura?</h2>
+          <p>Escolha a especialidade para ver médicos e horários.</p>
+        </div>
+        <Link className="text-link" to="/medicos">
+          Ver todos
+        </Link>
+      </div>
+      <div className="specialties">
+        {specialties.map(([name, Icon]) => (
+          <Link
+            to={"/medicos?especialidade=" + encodeURIComponent(name)}
+            className="specialty"
+            key={name}
+          >
+            <span>
+              <Icon size={28} />
+            </span>
+            <strong>{name}</strong>
+            <ArrowUpRight size={16} />
+          </Link>
+        ))}
+      </div>
       <div className="home-grid">
         <Card className="triage-card">
           <div className="eyebrow">
             <ClipboardList size={18} /> PRÉ-TRIAGEM
           </div>
-          <h2>
-            Conte como
-            <br />
-            você está.
-          </h2>
+          <h2>Como você está se sentindo?</h2>
           <p>
             Seu histórico já está salvo. Responda apenas sobre este atendimento.
           </p>
           <Forward to="/triagem">Iniciar pré-triagem</Forward>
-          <small>Seu relato ajuda a preparar a consulta.</small>
         </Card>
         <div className="home-side">
-          <Card>
+          <Card className="health-shortcut">
             <div className="section-title">
               <ShieldCheck />
               <h2>Seu histórico de saúde</h2>
@@ -81,30 +100,6 @@ export function Home() {
             </Link>
           </Card>
         </div>
-      </div>
-      <div className="section-heading">
-        <div>
-          <h2>Encontre seu especialista</h2>
-          <p>Escolha a especialidade para ver médicos e horários.</p>
-        </div>
-        <Link className="text-link" to="/medicos">
-          Ver todos
-        </Link>
-      </div>
-      <div className="specialties">
-        {specialties.map(([name, Icon]) => (
-          <Link
-            to={"/medicos?especialidade=" + encodeURIComponent(name)}
-            className="specialty"
-            key={name}
-          >
-            <span>
-              <Icon size={28} />
-            </span>
-            <strong>{name}</strong>
-            <ArrowUpRight size={16} />
-          </Link>
-        ))}
       </div>
     </Page>
   );
