@@ -40,6 +40,3 @@ Para nós, a tecnologia deve apoiar o trabalho de quem cuida e ajudar quem preci
 
 <div align="center">
   <strong>ClinAi — seu cuidado começa aqui.</strong>
-  <br />
-  <sub><a href="docs/DESENVOLVIMENTO.md">Documentação técnica</a></sub>
-</div>
