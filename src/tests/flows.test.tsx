@@ -10,7 +10,13 @@ import {
   demoProfile,
   validateAvailability,
 } from "../services/mock";
-import { Book, Appointments, getTimes, nextDates } from "../pages/Booking";
+import {
+  Book,
+  Appointments,
+  Doctors,
+  getTimes,
+  nextDates,
+} from "../pages/Booking";
 import { Triage } from "../pages/Triage";
 import { DoctorAgenda } from "../pages/Doctor";
 import { Register } from "../pages/Auth";
@@ -36,6 +42,29 @@ function mount(path: string, element: React.ReactNode) {
   );
 }
 describe("Fluxos do ClinAi", () => {
+  it("preserva os filtros ao recolher e reabrir as opções", async () => {
+    const user = userEvent.setup();
+    mount("/test", <Doctors />);
+    await screen.findByText("6 profissionais encontrados");
+    const toggle = screen.getByRole("button", { name: "Filtros" });
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    await user.click(toggle);
+    await user.selectOptions(
+      screen.getByLabelText("Especialidade"),
+      "Cardiologia",
+    );
+    await screen.findByText("1 profissional encontrado");
+    expect(
+      screen.getByRole("heading", { name: "Dra. Joana Lima" }),
+    ).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Filtros (1)" }));
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    await user.click(toggle);
+    expect(
+      (screen.getByLabelText("Especialidade") as HTMLSelectElement).value,
+    ).toBe("Cardiologia");
+  });
+
   it("agenda, confirma presença e cancela uma consulta pela interface", async () => {
     const user = userEvent.setup();
     mount("/medicos/gustavo", null);

@@ -48,7 +48,17 @@ export function Field({
   return (
     <label className="field">
       <span>{label}</span>
-      <input {...props} />
+      <input
+        autoCapitalize={props.type === "email" ? "none" : undefined}
+        inputMode={
+          props.type === "email"
+            ? "email"
+            : props.type === "tel"
+              ? "tel"
+              : undefined
+        }
+        {...props}
+      />
     </label>
   );
 }
@@ -150,6 +160,11 @@ export function Layout({ children }: { children: ReactNode }) {
   const { profile, setProfile, setReport } = useApp();
   const { pathname } = useLocation();
   const doctor = profile?.role === "doctor";
+  const isActive = (url: string) =>
+    pathname === url ||
+    pathname.startsWith(url + "/") ||
+    (url === "/perfil" && pathname === "/historico") ||
+    (url === "/inicio" && pathname === "/triagem");
   const nav = doctor
     ? ([
         ["/medico", "Agenda", CalendarDays],
@@ -181,10 +196,11 @@ export function Layout({ children }: { children: ReactNode }) {
           {doctor ? "ÁREA DO PROFISSIONAL" : "SEU ESPAÇO DE CUIDADO"}
         </p>
         {profile ? (
-          <nav>
+          <nav aria-label="Navegação principal">
             {nav.map(([url, label, Icon]) => (
               <Link
-                className={pathname === url ? "active" : ""}
+                className={isActive(url) ? "active" : ""}
+                aria-current={isActive(url) ? "page" : undefined}
                 key={url}
                 to={url}
               >
@@ -235,8 +251,12 @@ export function Layout({ children }: { children: ReactNode }) {
       </aside>
       <div className="workspace">
         <div className="topbar">
-          <Link to="/" className="mobile-brand">
-            ClinAi
+          <Link
+            to={profile ? (doctor ? "/medico" : "/inicio") : "/"}
+            className="mobile-brand"
+            aria-label="ClinAi — início"
+          >
+            <HeartPulse size={25} aria-hidden="true" /> Clin<span>Ai</span>
           </Link>
           <span>
             {doctor ? "Portal do profissional" : "Portal do paciente"}
@@ -249,15 +269,18 @@ export function Layout({ children }: { children: ReactNode }) {
         <footer>ClinAi · Cuidado que começa com escuta.</footer>
       </div>
       {profile && (
-        <nav className="mobile-nav">
+        <nav className="mobile-nav" aria-label="Navegação no celular">
           {nav.map(([url, label, Icon]) => (
             <Link
-              className={pathname === url ? "active" : ""}
+              className={isActive(url) ? "active" : ""}
+              aria-current={isActive(url) ? "page" : undefined}
               to={url}
               key={url}
             >
-              <Icon size={21} />
-              {label}
+              <span className="nav-icon">
+                <Icon size={21} aria-hidden="true" />
+              </span>
+              <span>{label === "Disponibilidade" ? "Horários" : label}</span>
             </Link>
           ))}
         </nav>

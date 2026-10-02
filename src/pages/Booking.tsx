@@ -5,7 +5,15 @@ import {
   useParams,
   useSearchParams,
 } from "react-router-dom";
-import { CalendarDays, MapPin, Star, Search, CheckCircle2 } from "lucide-react";
+import {
+  CalendarDays,
+  MapPin,
+  Star,
+  Search,
+  CheckCircle2,
+  SlidersHorizontal,
+  ChevronDown,
+} from "lucide-react";
 import {
   Button,
   Card,
@@ -73,6 +81,7 @@ export function DoctorIdentity({ doctor }: { doctor: Doctor }) {
 export function Doctors() {
   const [q, setQ] = useSearchParams();
   const [term, setTerm] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [plan, setPlan] = useState("Todos");
   const [sort, setSort] = useState("Mais bem avaliados");
   const [list, setList] = useState<Doctor[]>([]);
@@ -127,30 +136,51 @@ export function Doctors() {
             onChange={(e) => setTerm(e.target.value)}
           />
         </div>
-        <Select
-          label="Especialidade"
-          value={specialty}
-          onChange={(v) => setQ(v === "Todas" ? {} : { especialidade: v })}
-          options={["Todas", ...specialties.map((s) => s[0])]}
-        />
-        <Select
-          label="Convênio"
-          value={plan}
-          onChange={setPlan}
-          options={[
-            "Todos",
-            "Unimed",
-            "Bradesco Saúde",
-            "SulAmérica",
-            "Particular",
-          ]}
-        />
+        <button
+          type="button"
+          className="filter-toggle"
+          aria-expanded={filtersOpen}
+          aria-controls="doctor-filters"
+          onClick={() => setFiltersOpen(!filtersOpen)}
+        >
+          <SlidersHorizontal size={19} />
+          <span>
+            Filtros
+            {specialty !== "Todas" || plan !== "Todos"
+              ? ` (${Number(specialty !== "Todas") + Number(plan !== "Todos")})`
+              : ""}
+          </span>
+          <ChevronDown size={18} />
+        </button>
+        <div
+          id="doctor-filters"
+          className={"filter-options" + (filtersOpen ? " is-open" : "")}
+        >
+          <Select
+            label="Especialidade"
+            value={specialty}
+            onChange={(v) => setQ(v === "Todas" ? {} : { especialidade: v })}
+            options={["Todas", ...specialties.map((s) => s[0])]}
+          />
+          <Select
+            label="Convênio"
+            value={plan}
+            onChange={setPlan}
+            options={[
+              "Todos",
+              "Unimed",
+              "Bradesco Saúde",
+              "SulAmérica",
+              "Particular",
+            ]}
+          />
+        </div>
       </Card>
       <div className="results-heading">
         <p>
           {loading
             ? "Buscando profissionais…"
-            : `${results.length} profissionais encontrados`}
+            : `${results.length} ${results.length === 1 ? "profissional encontrado" : "profissionais encontrados"}`}
         </p>
         <Select
           label="Ordenar por"
@@ -289,29 +319,30 @@ export function Book() {
           <Forward to="/consultas">Ver minhas consultas</Forward>
         </Card>
       ) : (
-        <div className="booking-grid">
-          <Card>
+        <div className="booking-grid booking-flow">
+          <Card className="booking-profile">
             <DoctorIdentity doctor={doctor} />
-            <hr />
-            <h3>Sobre o atendimento</h3>
-            <p>Consulta presencial em {doctor.clinic}, Recife.</p>
-            <p>
-              Atendimento em {doctor.specialty.toLowerCase()}, com escuta e
-              acompanhamento individual.
-            </p>
-            <div className="tags">
-              {doctor.plans.map((p) => (
-                <span key={p}>{p}</span>
-              ))}
-            </div>
-            <div className="notice">
-              <CalendarDays />
+            <details className="doctor-about">
+              <summary>Sobre o atendimento e convênios</summary>
+              <p>Consulta presencial em {doctor.clinic}, Recife.</p>
               <p>
-                Seu histórico e o relato de pré-triagem acompanharão esta
-                consulta.
+                Atendimento em {doctor.specialty.toLowerCase()}, com escuta e
+                acompanhamento individual.
               </p>
-            </div>
-            <small>Perfil e disponibilidade ilustrativos.</small>
+              <div className="tags">
+                {doctor.plans.map((p) => (
+                  <span key={p}>{p}</span>
+                ))}
+              </div>
+              <div className="notice">
+                <CalendarDays />
+                <p>
+                  Seu histórico e o relato de pré-triagem acompanharão esta
+                  consulta.
+                </p>
+              </div>
+              <small>Perfil e disponibilidade ilustrativos.</small>
+            </details>
           </Card>
           <Card>
             {confirm ? (
@@ -364,10 +395,16 @@ export function Book() {
               <>
                 <h2>Escolha um horário</h2>
                 <p>Selecione o dia e o horário disponíveis.</p>
-                <div className="date-grid">
+                <p className="mobile-hint">Deslize para ver mais dias</p>
+                <div
+                  className="date-grid"
+                  role="group"
+                  aria-label="Dias disponíveis"
+                >
                   {nextDates().map((d) => (
                     <button
                       key={d}
+                      aria-label={dateLabel(d)}
                       aria-pressed={date === d}
                       className={date === d ? "selected" : ""}
                       onClick={() => {
@@ -390,7 +427,11 @@ export function Book() {
                   ))}
                 </div>
                 <p className="date-caption">{dateLabel(date)}</p>
-                <div className="time-grid">
+                <div
+                  className="time-grid"
+                  role="group"
+                  aria-label="Horários disponíveis"
+                >
                   {getTimes(
                     doctor.id === "gustavo"
                       ? availability.find((v) => v.date === date)
@@ -415,12 +456,19 @@ export function Book() {
                   options={doctor.plans}
                 />
                 <ErrorMessage message={error} />
-                <Button
-                  disabled={!time || reserved(time)}
-                  onClick={() => setConfirm(true)}
-                >
-                  Continuar com o agendamento
-                </Button>
+                <div className="booking-action">
+                  <p className="booking-selection" role="status">
+                    {time
+                      ? `${dateLabel(date)} · ${time}`
+                      : "Selecione um horário para continuar"}
+                  </p>
+                  <Button
+                    disabled={!time || reserved(time)}
+                    onClick={() => setConfirm(true)}
+                  >
+                    Continuar com o agendamento
+                  </Button>
+                </div>
               </>
             )}
           </Card>

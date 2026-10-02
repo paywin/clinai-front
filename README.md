@@ -79,3 +79,18 @@ Foram mantidas a paleta verde-petróleo (`#073d43`), a cor primária (`#006c67`)
 O limite do plano do Figma impediu a leitura detalhada de algumas telas. Os downloads de três imagens ilustrativas de especialidades falharam; os cards usam iniciais como fallback e permitem receber uma imagem pelo campo `Doctor.image`. Esses assets devem ser conferidos quando o acesso estiver disponível.
 
 O build TypeScript e os testes DOM podem ser executados pelos comandos acima. A abertura da prévia local no navegador remoto foi bloqueada pelo ambiente; a conferência visual final em celular e desktop permanece pendente. Não se afirma equivalência pixel a pixel ao Figma.
+
+## Atualização mobile — setembro de 2026
+
+A experiência prioriza celular e tablet em modo retrato (até 900 px):
+
+- Home com especialidades no início, seguida de pré-triagem e atalhos de saúde.
+- Navegação inferior com área ativa destacada também nas telas internas.
+- Cabeçalho compacto, cartões com cantos arredondados e textos maiores.
+- Filtros recolhíveis com contador; seleção preservada ao abrir e fechar.
+- Calendário horizontal com dias de 66 px de largura e horários de pelo menos 52 px de altura.
+- Campos de 16 px, teclado apropriado para e-mail/telefone e formulários em uma coluna.
+- Margens para recortes da tela e barra de gestos (`safe-area-inset`), sem bloquear o zoom.
+- Regras específicas para 320–360 px, tablets e texto ampliado.
+
+Validação desta atualização: build TypeScript e testes DOM de fluxos. A prévia local retornou `ERR_BLOCKED_BY_CLIENT` no navegador remoto. A verificação visual em aparelho real, incluindo teclado virtual, rotação e zoom, continua pendente; os testes DOM não medem geometria ou responsividade.
