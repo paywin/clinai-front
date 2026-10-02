@@ -1977,3 +1977,181 @@ p,
   background: #2b4d52;
   color: #d3f7ef;
 }
+/* Brand surfaces: mint keeps the original transparent teal mark legible. */
+:root {
+  --brand-surface: #e2f3ed;
+  --brand-ink: #124c50;
+  --brand-soft-ink: #436965;
+}
+.sidebar,
+[data-theme="dark"] .sidebar {
+  background: var(--brand-surface);
+  color: var(--brand-ink);
+  border-right: 1px solid #c7dfd6;
+  padding-top: 24px;
+  overflow-y: auto;
+}
+.sidebar .brand {
+  gap: 8px;
+  font-size: 1.8rem;
+}
+.sidebar .brand-logo {
+  width: 88px;
+  height: 80px;
+  object-fit: contain;
+  border-radius: 0;
+}
+.brand span span,
+.mobile-brand > span {
+  color: #007f79;
+}
+.sidebar-label,
+.sidebar-bottom small,
+.side-intro p,
+.logout {
+  color: var(--brand-soft-ink);
+}
+.sidebar-label {
+  margin: 28px 0 20px;
+  line-height: 1.7;
+}
+.sidebar nav a {
+  color: #335f5b;
+  border-radius: 12px;
+}
+.sidebar nav a:hover {
+  background: #cfe8df;
+}
+.sidebar nav a.active {
+  background: #086d68;
+  color: white;
+  box-shadow: none;
+}
+.sidebar .user {
+  border-color: #bdd8ce;
+}
+.sidebar-bottom {
+  padding-top: 28px;
+}
+.topbar {
+  background: #f8fcfa;
+}
+.local-banner {
+  background: #edf5f1;
+  border-color: #dbe8e2;
+  color: #536e66;
+}
+.brand-logo,
+.welcome-logo {
+  background: transparent;
+  border-radius: 0;
+}
+.welcome-mark {
+  display: grid;
+  place-items: center;
+  width: 232px;
+  height: 204px;
+  margin: 0 auto 20px;
+  background: radial-gradient(ellipse, #e2f3ed 35%, #e2f3ed00 72%);
+}
+.welcome-mark .welcome-logo {
+  width: 232px;
+  height: auto;
+  margin: 0;
+}
+.page-head:has(+ .page-body .welcome) {
+  text-align: center;
+  padding-bottom: 16px;
+}
+.welcome {
+  padding-bottom: 20px;
+}
+.welcome .button {
+  max-width: 420px;
+  margin-inline: auto;
+}
+.welcome h2 {
+  font-size: clamp(1.4rem, 2.8vw, 1.75rem);
+}
+[data-theme="dark"] {
+  --brand-surface: #c2ded4;
+  --brand-ink: #124c50;
+  --brand-soft-ink: #355c55;
+}
+[data-theme="dark"] .local-banner {
+  background: #15272b;
+  color: #adc7c0;
+  border-color: #31494b;
+}
+[data-theme="dark"] .welcome-mark {
+  background: radial-gradient(ellipse, #c2ded4 38%, #c2ded400 72%);
+}
+@media (max-width: 900px) {
+  .topbar,
+  [data-theme="dark"] .topbar {
+    background: var(--brand-surface);
+    color: var(--brand-ink);
+    min-height: 72px;
+    padding-block: max(10px, env(safe-area-inset-top)) 10px;
+  }
+  .mobile-brand {
+    font-size: 1.5rem;
+    gap: 6px;
+  }
+  .mobile-brand .brand-logo {
+    width: 56px;
+    height: 48px;
+    border-radius: 0;
+  }
+  .theme-toggle,
+  [data-theme="dark"] .theme-toggle {
+    background: #ffffff70;
+    border-color: #9dbfb3;
+    color: #155650;
+    border-radius: 50%;
+  }
+  .page-head,
+  [data-theme="dark"] .page-head {
+    background: var(--brand-surface);
+    color: var(--brand-ink);
+    padding: 12px 20px 24px;
+    border-radius: 0 0 22px 22px;
+  }
+  .page-head p,
+  .page-head .back {
+    color: var(--brand-soft-ink);
+  }
+  .local-banner,
+  [data-theme="dark"] .local-banner {
+    background: var(--brand-surface);
+    color: var(--brand-soft-ink);
+    border: 0;
+    font-size: 0.6875rem;
+    padding: 2px 16px 8px;
+  }
+  .page-head:has(+ .page-body .welcome) {
+    margin-bottom: 12px;
+    padding-block: 8px 20px;
+  }
+  .welcome-mark {
+    width: 180px;
+    height: 155px;
+    margin-bottom: 12px;
+  }
+  .welcome-mark .welcome-logo {
+    width: 180px;
+    max-width: 100%;
+  }
+  .welcome h2 {
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+  }
+  .welcome p {
+    font-size: 0.9375rem;
+    line-height: 1.65;
+    margin-bottom: 20px;
+  }
+  .welcome small {
+    margin-top: 14px;
+  }
+}

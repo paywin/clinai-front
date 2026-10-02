@@ -27,11 +27,13 @@ export function Welcome() {
       narrow
     >
       <div className="welcome">
-        <img
-          className="welcome-logo"
-          src="/assets/logo.png"
-          alt="Logo ClinAi"
-        />
+        <div className="welcome-mark">
+          <img
+            className="welcome-logo"
+            src="/assets/clinai-mark.png"
+            alt="Logo ClinAi"
+          />
+        </div>
         <h2>Seu cuidado começa aqui.</h2>
         <p>
           Conte como você está e encontre um profissional para o próximo passo.
