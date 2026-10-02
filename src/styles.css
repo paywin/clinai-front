@@ -1719,14 +1719,14 @@ p,
   width: 44px;
   height: 44px;
   object-fit: contain;
-  background: #f2f4f3;
+  background: transparent;
   border-radius: 12px;
 }
 .welcome-logo {
   object-fit: contain;
   aspect-ratio: 416/358;
   height: auto;
-  background: #f2f4f3;
+  background: transparent;
 }
 .input-wrap {
   display: block;

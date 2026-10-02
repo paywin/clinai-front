@@ -1,5 +1,7 @@
 # Contrato de integração — proposta v1
 
+> Esta proposta ainda não corresponde às rotas implementadas em mateusxsv/clinai. Consulte [a revisão de alinhamento](ALINHAMENTO.md) antes de conectar o backend.
+
 Base: `VITE_API_BASE_URL`. Respostas de sucesso são JSON direto, sem envelope `data`. Datas são `YYYY-MM-DD`, horários `HH:mm`; por enquanto o front apresenta horários locais de Recife. O backend deve definir explicitamente o fuso `America/Recife` e manter esse contrato ou adaptar o cliente. IDs são strings. Erros: `{ "message": "mensagem legível" }` com status HTTP adequado.
 
 | Método | Rota                               | Entrada                                                          | Saída                                |
