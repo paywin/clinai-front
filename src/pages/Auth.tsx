@@ -29,8 +29,13 @@ export function Welcome() {
       <div className="welcome">
         <div className="welcome-mark">
           <img
-            className="welcome-logo"
+            className="welcome-logo logo-on-light"
             src="/assets/clinai-mark.png"
+            alt="Logo ClinAi"
+          />
+          <img
+            className="welcome-logo logo-on-dark"
+            src="/assets/logo.png"
             alt="Logo ClinAi"
           />
         </div>
