@@ -117,7 +117,18 @@ export function Provider({ children }: { children: ReactNode }) {
           children
         ) : (
           <main className="session-screen">
-            <img src="/assets/clinai-mark.png" alt="ClinAi" width="100" />
+            <img
+              className="logo-on-light"
+              src="/assets/clinai-mark.png"
+              alt="ClinAi"
+              width="100"
+            />
+            <img
+              className="logo-on-dark"
+              src="/assets/logo.png"
+              alt="ClinAi"
+              width="100"
+            />
             <h1>Seu espaço de cuidado</h1>
             {sessionError ? (
               <>
