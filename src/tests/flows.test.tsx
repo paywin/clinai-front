@@ -236,3 +236,22 @@ describe("Fluxos do ClinAi", () => {
     ).toEqual(["08:00", "08:30"]);
   });
 });
+
+describe("Horários por profissional", () => {
+  it("uma reserva de um médico não bloqueia outro médico", async () => {
+    await mockService.book({
+      doctorId: "gustavo",
+      patientName: "Maria",
+      date: nextDates()[0],
+      time: "09:00",
+      plan: "Particular",
+      health: demoProfile.health,
+    });
+    expect(await mockService.getSlots("gustavo", nextDates()[0])).not.toContain(
+      "09:00",
+    );
+    expect(await mockService.getSlots("joana", nextDates()[0])).toContain(
+      "09:00",
+    );
+  });
+});

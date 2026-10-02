@@ -23,13 +23,13 @@ export function Welcome() {
   return (
     <Page
       title="Bem-vindo à ClinAi"
-      subtitle="Sua pré-triagem automatizada"
+      subtitle="Sua saúde, com mais praticidade"
       narrow
     >
       <div className="welcome">
         <img
           className="welcome-logo"
-          src="/assets/logo.jpg"
+          src="/assets/logo.png"
           alt="Logo ClinAi"
         />
         <h2>Seu cuidado começa aqui.</h2>
@@ -37,7 +37,9 @@ export function Welcome() {
           Conte como você está e encontre um profissional para o próximo passo.
         </p>
         <Forward to="/acesso">Começar</Forward>
-        <small>Protótipo acadêmico • dados fictícios</small>
+        <small>
+          Encontre atendimento. Organize suas consultas. Cuide de você.
+        </small>
       </div>
     </Page>
   );
@@ -359,8 +361,9 @@ export function Register() {
                   <strong>Como usaremos seus dados</strong>
                   <p>
                     O histórico acompanha o resumo para o profissional
-                    responsável. Nesta demonstração, os dados ficam apenas nesta
-                    sessão do navegador. Não insira informações reais.
+                    responsável pelo atendimento.{" "}
+                    {isMock &&
+                      "Neste ambiente local, use apenas dados fictícios: as informações ficam nesta sessão do navegador."}
                   </p>
                 </div>
               </div>
@@ -371,7 +374,7 @@ export function Register() {
                   checked={consent}
                   onChange={(e) => setConsent(e.target.checked)}
                 />
-                Li e compreendi o uso dos dados nesta demonstração.
+                Li e compreendi como meus dados serão usados no atendimento.
               </label>
             </>
           )}

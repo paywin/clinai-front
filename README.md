@@ -62,7 +62,7 @@ As variáveis `VITE_*` são públicas no bundle. Nunca coloque senhas de banco, 
 
 ## Demonstração e persistência
 
-O modo padrão é `mock`. Médicos, notas, convênios e valores são fictícios. O login aceita e-mail válido e senha com pelo menos seis caracteres; o cadastro exige oito. Isso valida a interface, não autentica usuários. Senhas não são persistidas.
+Em `npm run dev` e nos testes, o padrão é `mock`; builds de produção usam HTTP por padrão. Para prévia local simulada de um build, configure explicitamente `VITE_API_MODE=mock` antes de compilar. Não publique essa configuração como atendimento real. Médicos, notas, convênios e valores são fictícios. O login aceita e-mail válido e senha com pelo menos seis caracteres; o cadastro exige oito. Isso valida a interface, não autentica usuários. Senhas não são persistidas.
 
 Perfil, sessão, histórico, relatos agendados, consultas e disponibilidade ficam em `sessionStorage`, apenas na aba atual. Os dados sobrevivem ao recarregamento e à troca entre os perfis de paciente/médico na mesma aba. Fechar a sessão da aba encerra essa persistência; ela não equivale a banco de dados. O modo HTTP não usa o armazenamento mock. Não use informações pessoais ou de saúde reais nesta versão.
 
@@ -94,3 +94,11 @@ A experiência prioriza celular e tablet em modo retrato (até 900 px):
 - Regras específicas para 320–360 px, tablets e texto ampliado.
 
 Validação desta atualização: build TypeScript e testes DOM de fluxos. A prévia local retornou `ERR_BLOCKED_BY_CLIENT` no navegador remoto. A verificação visual em aparelho real, incluindo teclado virtual, rotação e zoom, continua pendente; os testes DOM não medem geometria ou responsividade.
+
+## Atualização de outubro de 2026
+
+Nova logo em cabeçalhos, boas-vindas e favicon. Temas claro, escuro e automático, preferências persistentes de texto, mostrar/ocultar senha, aviso de falta de conexão, favoritos por conta neste dispositivo e próxima consulta na home. Consultas separadas em próximas, anteriores e canceladas. Favoritos e preferências são locais e não sincronizam entre dispositivos.
+
+O modo HTTP restaura sessão por GET /me, trata expiração e consulta horários por médico/data sem gerar disponibilidade fictícia. O backend ainda precisa implementar o contrato: autenticação, e-mails, reservas e persistência reais dependem dele. O ambiente local continua explicitamente identificado.
+
+Validação desta revisão: build de produção e testes de fluxo/contrato HTTP aprovados. A conferência visual segue pendente: o ambiente bloqueou a abertura de porta local (EPERM) e não possui o executável do Chromium para Playwright.

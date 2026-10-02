@@ -1,10 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  Link,
-  useNavigate,
-  useParams,
-  useSearchParams,
-} from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
   CalendarDays,
   MapPin,
@@ -13,6 +8,7 @@ import {
   CheckCircle2,
   SlidersHorizontal,
   ChevronDown,
+  Heart,
 } from "lucide-react";
 import {
   Button,
@@ -24,7 +20,7 @@ import {
   Select,
   useAction,
 } from "../components/ui";
-import { service } from "../services/api";
+import { service, isMock } from "../services/api";
 import { useApp } from "../state";
 import type { Appointment, Doctor, Availability } from "../domain/types";
 import { specialties } from "./Patient";
@@ -42,6 +38,7 @@ export function nextDates() {
   });
 }
 export function getTimes(v?: Availability) {
+  if (v && (!Number.isFinite(v.duration) || v.duration <= 0)) return [];
   if (!v) return ["09:00", "10:30", "11:00", "14:00", "15:30", "16:00"];
   const start = Number(v.start.slice(0, 2)) * 60 + Number(v.start.slice(3));
   const end = Number(v.end.slice(0, 2)) * 60 + Number(v.end.slice(3));
@@ -80,6 +77,27 @@ export function DoctorIdentity({ doctor }: { doctor: Doctor }) {
 }
 export function Doctors() {
   const [q, setQ] = useSearchParams();
+  const { profile } = useApp();
+  const favoriteKey = `clinai:favorites:${profile?.id}`;
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    try {
+      const value = JSON.parse(localStorage.getItem(favoriteKey) || "[]");
+      return Array.isArray(value) ? value : [];
+    } catch {
+      return [];
+    }
+  });
+  const [onlyFavorites, setOnlyFavorites] = useState(false);
+  const toggleFavorite = (id: string) => {
+    const value = favorites.includes(id)
+      ? favorites.filter((v) => v !== id)
+      : [...favorites, id];
+    setFavorites(value);
+    try {
+      localStorage.setItem(favoriteKey, JSON.stringify(value));
+    } catch {}
+  };
+
   const [term, setTerm] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [plan, setPlan] = useState("Todos");
@@ -103,6 +121,7 @@ export function Doctors() {
   const results = list
     .filter(
       (d) =>
+        (!onlyFavorites || favorites.includes(d.id)) &&
         (specialty === "Todas" || d.specialty === specialty) &&
         (plan === "Todos" || d.plans.includes(plan)) &&
         `${d.name} ${d.clinic} ${d.specialty}`
@@ -176,6 +195,13 @@ export function Doctors() {
           />
         </div>
       </Card>
+      <button
+        className="favorite-filter"
+        aria-pressed={onlyFavorites}
+        onClick={() => setOnlyFavorites(!onlyFavorites)}
+      >
+        <Heart size={18} /> Meus favoritos ({favorites.length})
+      </button>
       <div className="results-heading">
         <p>
           {loading
@@ -194,6 +220,17 @@ export function Doctors() {
       <div className="doctors-grid">
         {results.map((d) => (
           <Card key={d.id}>
+            <button
+              className="favorite-toggle"
+              aria-label={`Favoritar ${d.name}`}
+              aria-pressed={favorites.includes(d.id)}
+              onClick={() => toggleFavorite(d.id)}
+            >
+              <Heart
+                size={20}
+                fill={favorites.includes(d.id) ? "currentColor" : "none"}
+              />
+            </button>
             <DoctorIdentity doctor={d} />
             <div className="tags">
               {d.plans.map((p) => (
@@ -219,24 +256,29 @@ export function Doctors() {
               setQ({});
               setTerm("");
               setPlan("Todos");
+              setOnlyFavorites(false);
             }}
           >
             Limpar filtros
           </Button>
         </Card>
       )}
-      <small>Profissionais, avaliações, convênios e valores fictícios.</small>
+      {isMock && (
+        <small>Profissionais, avaliações, convênios e valores fictícios.</small>
+      )}
     </Page>
   );
 }
 export function Book() {
   const { id } = useParams();
-  const nav = useNavigate();
+
   const { profile, report, setReport } = useApp();
   const [doctor, setDoctor] = useState<Doctor>();
   const [loaded, setLoaded] = useState(false);
-  const [all, setAll] = useState<Appointment[]>([]);
-  const [availability, setAvailability] = useState<Availability[]>([]);
+  const [slots, setSlots] = useState<string[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(true);
+  const [slotsError, setSlotsError] = useState("");
+  const [refreshSlots, setRefreshSlots] = useState(0);
   const [date, setDate] = useState(nextDates()[0]);
   const [time, setTime] = useState("");
   const [plan, setPlan] = useState("Particular");
@@ -245,17 +287,39 @@ export function Book() {
   const { busy, error, run } = useAction();
   useEffect(() => {
     void run(async () => {
-      const [doctors, appointments, slots] = await Promise.all([
-        service.getDoctors(),
-        service.getAppointments(),
-        service.getAvailability(),
-      ]);
-      setDoctor(doctors.find((d) => d.id === id));
-      setAll(appointments);
-      setAvailability(slots);
+      const doctors = await service.getDoctors();
+      const found = doctors.find((d) => d.id === id);
+      setDoctor(found);
+      setPlan(found?.plans[0] || "Particular");
       setLoaded(true);
     });
   }, [id]);
+  useEffect(() => {
+    let current = true;
+    setSlotsLoading(true);
+    setSlotsError("");
+    setSlots([]);
+    setTime("");
+    service
+      .getSlots(id!, date)
+      .then((value) => {
+        if (current) setSlots(value);
+      })
+      .catch((e) => {
+        if (current)
+          setSlotsError(
+            e instanceof Error
+              ? e.message
+              : "Não foi possível buscar os horários.",
+          );
+      })
+      .finally(() => {
+        if (current) setSlotsLoading(false);
+      });
+    return () => {
+      current = false;
+    };
+  }, [id, date, refreshSlots]);
   if (!doctor)
     return (
       <Page
@@ -268,21 +332,25 @@ export function Book() {
         <Forward to="/medicos">Ver profissionais</Forward>
       </Page>
     );
-  const reserved = (t: string) =>
-    all.some(
-      (a) => a.status !== "cancelled" && a.date === date && a.time === t,
-    );
+  const reserved = (t: string) => !slots.includes(t);
   const submit = () =>
     run(async () => {
-      const appointment = await service.book({
-        doctorId: doctor.id,
-        patientName: profile!.name,
-        date,
-        time,
-        plan,
-        health: { ...profile!.health },
-        report,
-      });
+      let appointment: Appointment;
+      try {
+        appointment = await service.book({
+          doctorId: doctor.id,
+          patientName: profile!.name,
+          date,
+          time,
+          plan,
+          health: { ...profile!.health },
+          report,
+        });
+      } catch (error) {
+        setConfirm(false);
+        setRefreshSlots((v) => v + 1);
+        throw error;
+      }
       setDone(appointment);
       setReport(undefined);
     });
@@ -315,7 +383,7 @@ export function Book() {
             {doctor.clinic} · Recife
           </p>
           <span className="status scheduled">Agendada</span>
-          <p>Agendamento de demonstração. Nenhuma clínica foi contatada.</p>
+          {isMock && <p>Agendamento local. Nenhuma clínica foi contatada.</p>}
           <Forward to="/consultas">Ver minhas consultas</Forward>
         </Card>
       ) : (
@@ -341,7 +409,7 @@ export function Book() {
                   consulta.
                 </p>
               </div>
-              <small>Perfil e disponibilidade ilustrativos.</small>
+              {isMock && <small>Perfil e disponibilidade ilustrativos.</small>}
             </details>
           </Card>
           <Card>
@@ -432,11 +500,7 @@ export function Book() {
                   role="group"
                   aria-label="Horários disponíveis"
                 >
-                  {getTimes(
-                    doctor.id === "gustavo"
-                      ? availability.find((v) => v.date === date)
-                      : undefined,
-                  ).map((t) => (
+                  {slots.map((t) => (
                     <button
                       disabled={reserved(t)}
                       aria-pressed={time === t}
@@ -449,6 +513,23 @@ export function Book() {
                     </button>
                   ))}
                 </div>
+                {slotsLoading && (
+                  <p role="status">Buscando horários disponíveis…</p>
+                )}
+                <ErrorMessage message={slotsError} />
+                {slotsError && (
+                  <Button
+                    secondary
+                    onClick={() => setRefreshSlots((v) => v + 1)}
+                  >
+                    Buscar horários novamente
+                  </Button>
+                )}
+                {!slotsLoading && !slotsError && !slots.length && (
+                  <p role="status">
+                    Nenhum horário disponível neste dia. Escolha outra data.
+                  </p>
+                )}
                 <Select
                   label="Forma de atendimento"
                   value={plan}
@@ -501,13 +582,16 @@ export function Appointments() {
     .filter((a) =>
       filter === "Canceladas"
         ? a.status === "cancelled"
-        : a.status !== "cancelled",
+        : a.status !== "cancelled" &&
+          (filter === "Anteriores"
+            ? new Date(`${a.date}T${a.time}:00-03:00`).getTime() < Date.now()
+            : new Date(`${a.date}T${a.time}:00-03:00`).getTime() >= Date.now()),
     )
     .sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));
   return (
     <Page title="Minhas consultas" subtitle="Seus próximos passos de cuidado">
       <div className="tabs">
-        {["Próximas", "Canceladas"].map((f) => (
+        {["Próximas", "Anteriores", "Canceladas"].map((f) => (
           <button
             aria-pressed={filter === f}
             className={filter === f ? "active" : ""}
@@ -532,7 +616,9 @@ export function Appointments() {
           <h2>
             {filter === "Canceladas"
               ? "Nenhuma consulta cancelada"
-              : "Nenhuma consulta agendada"}
+              : filter === "Anteriores"
+                ? "Nenhuma consulta anterior"
+                : "Nenhuma consulta agendada"}
           </h2>
           <p>Encontre um profissional e escolha o melhor horário para você.</p>
           <Forward to="/medicos">Encontrar atendimento</Forward>
@@ -575,7 +661,7 @@ export function Appointments() {
                 >
                   {selected === a.id ? "Fechar detalhes" : "Ver detalhes"}
                 </Button>
-                {a.status === "scheduled" && (
+                {filter === "Próximas" && a.status === "scheduled" && (
                   <Button
                     disabled={busy}
                     onClick={() =>
@@ -590,7 +676,7 @@ export function Appointments() {
                     Confirmar presença
                   </Button>
                 )}
-                {a.status !== "cancelled" && (
+                {filter === "Próximas" && a.status !== "cancelled" && (
                   <button
                     className="danger-link"
                     onClick={() => setCancel(a.id)}

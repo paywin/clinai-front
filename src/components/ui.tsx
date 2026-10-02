@@ -13,7 +13,10 @@ import {
   CalendarDays,
   UserRound,
   LogOut,
-  HeartPulse,
+  Moon,
+  Sun,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { useApp } from "../state";
 import { service, isMock } from "../services/api";
@@ -45,20 +48,35 @@ export function Field({
   label,
   ...props
 }: InputHTMLAttributes<HTMLInputElement> & { label: string }) {
+  const [visible, setVisible] = useState(false);
   return (
     <label className="field">
       <span>{label}</span>
-      <input
-        autoCapitalize={props.type === "email" ? "none" : undefined}
-        inputMode={
-          props.type === "email"
-            ? "email"
-            : props.type === "tel"
-              ? "tel"
-              : undefined
-        }
-        {...props}
-      />
+      <span className="input-wrap">
+        <input
+          autoCapitalize={props.type === "email" ? "none" : undefined}
+          inputMode={
+            props.type === "email"
+              ? "email"
+              : props.type === "tel"
+                ? "tel"
+                : undefined
+          }
+          {...props}
+          type={props.type === "password" && visible ? "text" : props.type}
+        />
+        {props.type === "password" && (
+          <button
+            className="password-toggle"
+            type="button"
+            aria-label={visible ? "Ocultar senha" : "Mostrar senha"}
+            aria-pressed={visible}
+            onClick={() => setVisible(!visible)}
+          >
+            {visible ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+        )}
+      </span>
     </label>
   );
 }
@@ -157,7 +175,18 @@ export function useAction() {
   return { busy, error, run };
 }
 export function Layout({ children }: { children: ReactNode }) {
-  const { profile, setProfile, setReport } = useApp();
+  const { profile, setProfile, setReport, theme, setTheme } = useApp();
+  const { busy, error, run } = useAction();
+  const [online, setOnline] = useState(navigator.onLine);
+  useEffect(() => {
+    const update = () => setOnline(navigator.onLine);
+    window.addEventListener("online", update);
+    window.addEventListener("offline", update);
+    return () => {
+      window.removeEventListener("online", update);
+      window.removeEventListener("offline", update);
+    };
+  }, []);
   const { pathname } = useLocation();
   const doctor = profile?.role === "doctor";
   const isActive = (url: string) =>
@@ -187,7 +216,7 @@ export function Layout({ children }: { children: ReactNode }) {
           to={profile ? (doctor ? "/medico" : "/inicio") : "/"}
           className="brand"
         >
-          <HeartPulse size={32} />
+          <img className="brand-logo" src="/assets/logo.png" alt="" />
           <span>
             Clin<span>Ai</span>
           </span>
@@ -235,18 +264,21 @@ export function Layout({ children }: { children: ReactNode }) {
               </div>
               <button
                 className="logout"
-                onClick={async () => {
-                  await service.logout();
-                  setProfile(null);
-                  setReport(undefined);
-                }}
+                disabled={busy}
+                onClick={() =>
+                  void run(async () => {
+                    await service.logout();
+                    setProfile(null);
+                    setReport(undefined);
+                  })
+                }
               >
                 <LogOut size={18} />
                 Sair da conta
               </button>
             </>
           )}
-          <small>ClinAi • Projeto integrador</small>
+          <small>ClinAi • Seu espaço de cuidado</small>
         </div>
       </aside>
       <div className="workspace">
@@ -256,15 +288,31 @@ export function Layout({ children }: { children: ReactNode }) {
             className="mobile-brand"
             aria-label="ClinAi — início"
           >
-            <HeartPulse size={25} aria-hidden="true" /> Clin<span>Ai</span>
+            <img className="brand-logo" src="/assets/logo.png" alt="" /> Clin
+            <span>Ai</span>
           </Link>
           <span>
             {doctor ? "Portal do profissional" : "Portal do paciente"}
           </span>
-          <span className="demo-badge">
-            {isMock ? "Demonstração • dados fictícios" : "ClinAi"}
-          </span>
+          <button
+            className="theme-toggle"
+            aria-label={
+              theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"
+            }
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          >
+            {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
         </div>
+        {!online && (
+          <div className="connection-banner" role="status">
+            Você está sem conexão. Reconecte-se para salvar alterações.
+          </div>
+        )}
+        {isMock && (
+          <div className="local-banner">Ambiente local · dados simulados</div>
+        )}
+        <ErrorMessage message={error} />
         <main id="main">{children}</main>
         <footer>ClinAi · Cuidado que começa com escuta.</footer>
       </div>

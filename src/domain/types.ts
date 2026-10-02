@@ -57,6 +57,8 @@ export interface Availability {
   duration: number;
 }
 export interface ClinAiService {
+  getSession(): Promise<Profile | null>;
+  getSlots(doctorId: string, date: string): Promise<string[]>;
   login(email: string, password: string, role: Role): Promise<Profile>;
   register(profile: Omit<Profile, "id">, password: string): Promise<Profile>;
   recover(email: string): Promise<void>;
