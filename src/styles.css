@@ -1714,3 +1714,261 @@ p,
     scroll-behavior: auto !important;
   }
 }
+/* Device preferences and shared controls */
+.brand-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  background: #f2f4f3;
+  border-radius: 12px;
+}
+.welcome-logo {
+  object-fit: contain;
+  aspect-ratio: 416/358;
+  height: auto;
+  background: #f2f4f3;
+}
+.input-wrap {
+  display: block;
+  position: relative;
+  width: 100%;
+}
+.input-wrap input {
+  width: 100%;
+}
+.input-wrap:has(.password-toggle) input {
+  padding-right: 54px;
+}
+.password-toggle {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  color: var(--muted);
+  border: 0;
+  border-radius: 8px;
+}
+.theme-toggle {
+  margin-left: auto;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  color: var(--brand);
+}
+.theme-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 20px;
+}
+.theme-options button,
+.favorite-filter {
+  padding: 12px;
+  min-height: 48px;
+  background: var(--paper);
+  color: var(--brand);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.theme-options [aria-pressed="true"],
+.favorite-filter[aria-pressed="true"] {
+  background: var(--brand);
+  color: #fff;
+}
+.local-banner {
+  text-align: center;
+  padding: 5px 16px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+}
+.connection-banner {
+  background: #fff0c6;
+  color: #654b14;
+  text-align: center;
+  padding: 12px 20px;
+}
+.session-screen {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 24px;
+  text-align: center;
+}
+.favorite-toggle {
+  float: right;
+  position: relative;
+  z-index: 1;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--brand);
+  background: var(--paper);
+  margin: 0 0 12px 10px;
+}
+.favorite-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+.tabs {
+  flex-wrap: wrap;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  color: #e4efec;
+  background: #101e22;
+  --paper: #192b30;
+  --muted: #aec3c4;
+  --line: #3b5358;
+  --brand: #64ddc5;
+  --dark: #d3f7ef;
+}
+[data-theme="dark"] .sidebar {
+  background: #0b191d;
+}
+[data-theme="dark"] .topbar,
+[data-theme="dark"] .mobile-nav,
+[data-theme="dark"] .card,
+[data-theme="dark"] .specialty {
+  background: var(--paper);
+  border-color: var(--line);
+}
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background: #112126;
+  color: #e4efec;
+  border-color: var(--line);
+}
+[data-theme="dark"] .button {
+  background: #64ddc5;
+  color: #092d2b;
+  border-color: #64ddc5;
+}
+[data-theme="dark"] .button.secondary,
+[data-theme="dark"] .date-grid button,
+[data-theme="dark"] .time-grid button,
+[data-theme="dark"] .filter-toggle {
+  background: #203b40;
+  color: #d3f7ef;
+  border-color: var(--line);
+}
+[data-theme="dark"] .date-grid .selected,
+[data-theme="dark"] .time-grid .selected {
+  background: #64ddc5;
+  color: #092d2b;
+}
+[data-theme="dark"] .triage-card,
+[data-theme="dark"] .notice,
+[data-theme="dark"] .details,
+[data-theme="dark"] .date-tile,
+[data-theme="dark"] .tags span,
+[data-theme="dark"] .avatar {
+  background: #203b40;
+  color: #d3f7ef;
+  border-color: var(--line);
+}
+[data-theme="dark"] .triage-card p,
+[data-theme="dark"] .triage-card .eyebrow,
+[data-theme="dark"] .mobile-nav a {
+  color: #aec3c4;
+}
+[data-theme="dark"] .mobile-nav a.active {
+  color: #64ddc5;
+}
+[data-theme="dark"] .mobile-nav a.active .nav-icon,
+[data-theme="dark"] .specialty > span {
+  background: #264c49;
+  color: #91e9d8;
+}
+[data-theme="dark"] .status,
+[data-theme="dark"] .success {
+  color: #a0efca;
+  background: #1b4539;
+}
+[data-theme="dark"] .error,
+[data-theme="dark"] .warning,
+[data-theme="dark"] .cancelled {
+  background: #422b2c;
+  color: #ffc1b7;
+}
+[data-theme="dark"] .danger-link {
+  color: #ffc1b7;
+}
+[data-theme="dark"] .theme-options [aria-pressed="true"],
+[data-theme="dark"] .favorite-filter[aria-pressed="true"] {
+  color: #092d2b;
+}
+@media (max-width: 900px) {
+  .mobile-brand .brand-logo {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+  }
+  .topbar {
+    gap: 10px;
+  }
+  .theme-options button {
+    padding-inline: 5px;
+    font-size: 0.875rem;
+  }
+}
+.upcoming-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin: 24px 0;
+  border-left: 4px solid var(--brand);
+}
+.upcoming-card .button {
+  width: auto;
+  flex-shrink: 0;
+}
+[data-theme="dark"] .date-grid .selected small {
+  color: #092d2b;
+}
+[data-theme="dark"] .triage-card h2 {
+  color: #d3f7ef;
+}
+[data-theme="dark"] .doctor-about,
+[data-theme="dark"] .summary > div,
+[data-theme="dark"] .tabs,
+[data-theme="dark"] .booking-action {
+  border-color: var(--line);
+}
+@media (max-width: 600px) {
+  .upcoming-card {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .upcoming-card .button {
+    width: 100%;
+  }
+}
+@media (max-width: 900px) {
+  [data-theme="dark"] .page-head {
+    background: #163339;
+    color: #e4efec;
+  }
+}
+[data-theme="dark"] .button:hover {
+  background: #92ecd9;
+  color: #092d2b;
+}
+[data-theme="dark"] .button.secondary:hover {
+  background: #2b4d52;
+  color: #d3f7ef;
+}

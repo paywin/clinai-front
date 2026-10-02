@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Heart,
@@ -34,6 +34,48 @@ export const specialties = [
 ] as const;
 export function Home() {
   const { profile } = useApp();
+  const [next, setNext] = useState<{
+    date: string;
+    time: string;
+    name: string;
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { error, run } = useAction();
+  const load = () =>
+    run(async () => {
+      setLoading(true);
+      try {
+        const [appointments, doctors] = await Promise.all([
+          service.getAppointments(),
+          service.getDoctors(),
+        ]);
+        const upcoming = appointments
+          .filter(
+            (a) =>
+              a.status !== "cancelled" &&
+              new Date(`${a.date}T${a.time}:00-03:00`).getTime() >= Date.now(),
+          )
+          .sort((a, b) =>
+            `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`),
+          )[0];
+        setNext(
+          upcoming
+            ? {
+                date: upcoming.date,
+                time: upcoming.time,
+                name:
+                  doctors.find((d) => d.id === upcoming.doctorId)?.name ||
+                  "Profissional",
+              }
+            : null,
+        );
+      } finally {
+        setLoading(false);
+      }
+    });
+  useEffect(() => {
+    void load();
+  }, []);
   return (
     <Page
       title={`Olá, ${profile!.name.split(" ")[0]}`}
@@ -63,6 +105,35 @@ export function Home() {
           </Link>
         ))}
       </div>
+      <Card className="upcoming-card">
+        <div>
+          <span className="eyebrow">SUA AGENDA</span>
+          <h2>Próxima consulta</h2>
+          {loading ? (
+            <p role="status">Consultando sua agenda…</p>
+          ) : error ? (
+            <>
+              <ErrorMessage message={error} />
+              <Button secondary onClick={() => void load()}>
+                Atualizar agenda
+              </Button>
+            </>
+          ) : next ? (
+            <p>
+              <strong>{next.name}</strong>
+              <br />
+              {new Date(next.date + "T12:00:00").toLocaleDateString(
+                "pt-BR",
+              )} às {next.time}
+            </p>
+          ) : (
+            <p>Você ainda não tem uma próxima consulta.</p>
+          )}
+        </div>
+        <Forward to={next ? "/consultas" : "/medicos"}>
+          {next ? "Ver consulta" : "Encontrar atendimento"}
+        </Forward>
+      </Card>
       <div className="home-grid">
         <Card className="triage-card">
           <div className="eyebrow">
@@ -105,7 +176,8 @@ export function Home() {
   );
 }
 export function Profile() {
-  const { profile, setProfile, setReport, large, setLarge } = useApp();
+  const { profile, setProfile, setReport, large, setLarge, theme, setTheme } =
+    useApp();
   const [data, setData] = useState(profile!);
   const [saved, setSaved] = useState(false);
   const { busy, error, run } = useAction();
@@ -179,6 +251,30 @@ export function Profile() {
           <Forward to="/historico">Atualizar histórico</Forward>
         </Card>
       )}
+      <Card>
+        <h2>Aparência</h2>
+        <p>
+          Escolha como prefere usar o ClinAi. Sua escolha fica salva neste
+          dispositivo.
+        </p>
+        <div className="theme-options" role="group" aria-label="Tema">
+          {(
+            [
+              ["system", "Automático"],
+              ["light", "Claro"],
+              ["dark", "Escuro"],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              aria-pressed={theme === value}
+              onClick={() => setTheme(value)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </Card>
       <Card>
         <div className="section-title">
           <Accessibility />

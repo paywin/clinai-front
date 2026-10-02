@@ -1,8 +1,19 @@
 import type { ClinAiService } from "../domain/types";
 import { mockService } from "./mock";
 const env = (import.meta as unknown as { env: Record<string, string> }).env;
-export const isMock = env.VITE_API_MODE !== "http";
-async function request<T>(
+export const isMock =
+  env.VITE_API_MODE === "mock" ||
+  (env.DEV && env.VITE_API_MODE !== "http") ||
+  env.MODE === "test";
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+  ) {
+    super(message);
+  }
+}
+export async function request<T>(
   path: string,
   method = "GET",
   body?: unknown,
@@ -22,21 +33,44 @@ async function request<T>(
     );
     if (!response.ok) {
       const error = await response.json().catch(() => null);
-      throw new Error(
+      if (
+        response.status === 401 &&
+        !path.startsWith("/auth/") &&
+        !(path === "/me" && method === "GET")
+      )
+        window.dispatchEvent(new Event("clinai:expired"));
+      throw new ApiError(
         error?.message ||
           `Não foi possível concluir a solicitação (${response.status}).`,
+        response.status,
       );
     }
     return response.status === 204 ? (undefined as T) : await response.json();
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError")
       throw new Error("O servidor demorou para responder. Tente novamente.");
+    if (error instanceof TypeError)
+      throw new Error(
+        "Não foi possível conectar. Verifique sua conexão e tente novamente.",
+      );
     throw error;
   } finally {
     clearTimeout(timer);
   }
 }
-const httpService: ClinAiService = {
+export const httpService: ClinAiService = {
+  getSession: async () => {
+    try {
+      return await request<import("../domain/types").Profile>("/me");
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) return null;
+      throw error;
+    }
+  },
+  getSlots: (id, date) =>
+    request(
+      `/doctors/${encodeURIComponent(id)}/slots?date=${encodeURIComponent(date)}`,
+    ),
   login: (email, password, role) =>
     request("/auth/login", "POST", { email, password, role }),
   register: (profile, password) =>

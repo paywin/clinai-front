@@ -115,6 +115,37 @@ export function validateAvailability(v: Availability) {
     throw new Error("Informe um período válido e duração de 10 a 120 minutos.");
 }
 export const mockService: ClinAiService = {
+  getSession: async () =>
+    JSON.parse(sessionStorage.getItem("clinai:session") || "null"),
+  getSlots: async (doctorId, date) => {
+    const appointments = await mockService.getAppointments();
+    const availability = await mockService.getAvailability();
+    const v =
+      doctorId === "gustavo"
+        ? availability.find((v) => v.date === date)
+        : undefined;
+    let times = ["09:00", "10:30", "11:00", "14:00", "15:30", "16:00"];
+    if (v) {
+      times = [];
+      const start = Number(v.start.slice(0, 2)) * 60 + Number(v.start.slice(3));
+      const end = Number(v.end.slice(0, 2)) * 60 + Number(v.end.slice(3));
+      if (v.duration > 0)
+        for (let t = start; t + v.duration <= end; t += v.duration)
+          times.push(
+            `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`,
+          );
+    }
+    return times.filter(
+      (time) =>
+        !appointments.some(
+          (a) =>
+            a.doctorId === doctorId &&
+            a.date === date &&
+            a.time === time &&
+            a.status !== "cancelled",
+        ),
+    );
+  },
   async login(email, password, role) {
     await delay();
     if (!email.includes("@") || password.length < 6)
