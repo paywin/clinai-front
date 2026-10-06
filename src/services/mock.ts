@@ -1,3 +1,4 @@
+import { createLocalId } from "./local-id";
 import type {
   Appointment,
   Availability,
@@ -169,7 +170,7 @@ export const mockService: ClinAiService = {
     await delay();
     if (password.length < 8)
       throw new Error("A senha precisa ter pelo menos 8 caracteres.");
-    const value = { ...profile, id: crypto.randomUUID() };
+    const value = { ...profile, id: createLocalId() };
     write("profile", value);
     return value;
   },
@@ -203,7 +204,7 @@ export const mockService: ClinAiService = {
       throw new Error("Este horário já está reservado. Escolha outro.");
     const appointment: Appointment = {
       ...input,
-      id: crypto.randomUUID(),
+      id: createLocalId(),
       status: "scheduled",
       reviewed: false,
     };
