@@ -1,10 +1,17 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
-import { Button, Card, Field, Forward, Page, Select } from "../components/ui";
-import { useApp } from "../state";
-import { HealthSummary } from "./Auth";
-import type { Report } from "../domain/types";
+import {
+  Button,
+  Card,
+  Field,
+  Forward,
+  Page,
+  Select,
+} from "../componentes/interface";
+import { useApp } from "../estado";
+import { HealthSummary } from "./Autenticacao";
+import type { Report } from "../dominio/tipos";
 export function ReportSummary({ report }: { report: Report }) {
   return (
     <dl className="summary">
@@ -212,11 +219,11 @@ export function Triage() {
                   <CheckCircle2 className="success-icon" />
                   <h2>Seu relato está organizado</h2>
                   <p>
-                    O profissional receberá seus sintomas e o histórico
-                    confirmado na consulta que você agendar.
+                    Seu relato será enviado com o histórico ao confirmar um
+                    agendamento. Até lá, ele permanece somente nesta página.
                   </p>
                   <p className="notice">
-                    Este protótipo não realiza diagnóstico nem classificação
+                    A pré-triagem não realiza diagnóstico nem classificação
                     automática de risco. A avaliação será feita por um
                     profissional.
                   </p>
@@ -229,7 +236,7 @@ export function Triage() {
                     : step === 1
                       ? "Não tenho esses sinais"
                       : step === 4
-                        ? "Salvar relato"
+                        ? "Concluir relato"
                         : "Continuar"}
                 </Button>
               )}

@@ -14,11 +14,11 @@ import {
   Forward,
   Page,
   useAction,
-} from "../components/ui";
-import { service, isMock } from "../services/api";
-import { emptyHealth } from "../services/mock";
-import { useApp } from "../state";
-import type { Health, Profile } from "../domain/types";
+} from "../componentes/interface";
+import { service, recursos, mensagemAcesso } from "../servicos/api";
+import { emptyHealth } from "../dominio/saude";
+import { useApp } from "../estado";
+import type { Health, Profile } from "../dominio/tipos";
 export function Welcome() {
   return (
     <Page
@@ -43,7 +43,10 @@ export function Welcome() {
         <p>
           Conte como você está e encontre um profissional para o próximo passo.
         </p>
-        <Forward to="/acesso">Começar</Forward>
+        <Forward to="/medicos">Encontrar profissionais</Forward>
+        <Link className="text-link" to="/acesso">
+          Acessar minha conta
+        </Link>
         <small>
           Encontre atendimento. Organize suas consultas. Cuide de você.
         </small>
@@ -84,15 +87,25 @@ export function Login() {
   const { setProfile } = useApp();
   const nav = useNavigate();
   const { busy, error, run } = useAction();
-  const login = (demo = false) =>
+  if (!recursos.autenticacao)
+    return (
+      <Page
+        title="Acesso à conta"
+        subtitle="Seu espaço de cuidado"
+        back="/acesso"
+        narrow
+      >
+        <Card>
+          <h2>Acesso indisponível no momento</h2>
+          <p>{mensagemAcesso}</p>
+          <Forward to="/medicos">Consultar profissionais</Forward>
+          <Forward to="/configuracoes">Configurações de acessibilidade</Forward>
+        </Card>
+      </Page>
+    );
+  const login = () =>
     run(async () => {
-      setProfile(
-        await service.login(
-          demo ? "maria@exemplo.com" : email,
-          demo ? "demonstracao" : password,
-          role,
-        ),
-      );
+      setProfile(await service.login(email, password, role));
       nav(role === "doctor" ? "/medico" : "/inicio");
     });
   return (
@@ -138,15 +151,6 @@ export function Login() {
             {busy ? "Entrando…" : "Entrar"}
           </Button>
         </form>
-        {isMock && (
-          <>
-            <div className="divider">ou explore o protótipo</div>
-            <Button secondary disabled={busy} onClick={() => void login(true)}>
-              Entrar na demonstração
-            </Button>
-            <small>O acesso é simulado. Use apenas dados fictícios.</small>
-          </>
-        )}
         {role === "patient" && (
           <p className="center">
             Ainda não tem uma conta?{" "}
@@ -163,6 +167,22 @@ export function Recover() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const { busy, error, run } = useAction();
+  if (!recursos.autenticacao)
+    return (
+      <Page
+        title="Acesso à conta"
+        subtitle="Seu espaço de cuidado"
+        back="/acesso"
+        narrow
+      >
+        <Card>
+          <h2>Acesso indisponível no momento</h2>
+          <p>{mensagemAcesso}</p>
+          <Forward to="/medicos">Consultar profissionais</Forward>
+          <Forward to="/configuracoes">Configurações de acessibilidade</Forward>
+        </Card>
+      </Page>
+    );
   return (
     <Page
       title={sent ? "Solicitação registrada" : "Recuperar acesso"}
@@ -173,11 +193,10 @@ export function Recover() {
         {sent ? (
           <>
             <CheckCircle2 className="success-icon" />
-            <h2>{isMock ? "Simulação concluída" : "Confira seu e-mail"}</h2>
+            <h2>Confira seu e-mail</h2>
             <p>
-              {isMock
-                ? "Nenhum e-mail foi enviado nesta demonstração."
-                : "Se o e-mail estiver cadastrado, você receberá instruções para recuperar seu acesso."}
+              Se o e-mail estiver cadastrado, você receberá instruções para
+              recuperar seu acesso.
             </p>
             <Forward to="/entrar">Voltar para entrar</Forward>
           </>
@@ -266,6 +285,22 @@ export function Register() {
   const { setProfile } = useApp();
   const nav = useNavigate();
   const { busy, error, run } = useAction();
+  if (!recursos.autenticacao)
+    return (
+      <Page
+        title="Acesso à conta"
+        subtitle="Seu espaço de cuidado"
+        back="/acesso"
+        narrow
+      >
+        <Card>
+          <h2>Acesso indisponível no momento</h2>
+          <p>{mensagemAcesso}</p>
+          <Forward to="/medicos">Consultar profissionais</Forward>
+          <Forward to="/configuracoes">Configurações de acessibilidade</Forward>
+        </Card>
+      </Page>
+    );
   return (
     <Page
       title={
@@ -369,8 +404,6 @@ export function Register() {
                   <p>
                     O histórico acompanha o resumo para o profissional
                     responsável pelo atendimento.{" "}
-                    {isMock &&
-                      "Neste ambiente local, use apenas dados fictícios: as informações ficam nesta sessão do navegador."}
                   </p>
                 </div>
               </div>

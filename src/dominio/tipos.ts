@@ -21,10 +21,10 @@ export interface Doctor {
   name: string;
   specialty: string;
   clinic: string;
-  rating: number;
-  reviews: number;
+  rating?: number;
+  reviews?: number;
   plans: string[];
-  price: number;
+  price?: number;
   initials: string;
   image?: string;
 }

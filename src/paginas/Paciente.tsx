@@ -10,7 +10,6 @@ import {
   ClipboardList,
   ArrowUpRight,
   ShieldCheck,
-  Accessibility,
 } from "lucide-react";
 import {
   Button,
@@ -20,10 +19,10 @@ import {
   Forward,
   Page,
   useAction,
-} from "../components/ui";
-import { useApp } from "../state";
-import { service } from "../services/api";
-import { HealthFields, HealthSummary } from "./Auth";
+} from "../componentes/interface";
+import { useApp } from "../estado";
+import { service } from "../servicos/api";
+import { HealthFields, HealthSummary } from "./Autenticacao";
 export const specialties = [
   ["Clínica geral", Stethoscope],
   ["Cardiologia", Heart],
@@ -176,8 +175,7 @@ export function Home() {
   );
 }
 export function Profile() {
-  const { profile, setProfile, setReport, large, setLarge, theme, setTheme } =
-    useApp();
+  const { profile, setProfile, setReport } = useApp();
   const [data, setData] = useState(profile!);
   const [saved, setSaved] = useState(false);
   const { busy, error, run } = useAction();
@@ -252,45 +250,9 @@ export function Profile() {
         </Card>
       )}
       <Card>
-        <h2>Aparência</h2>
-        <p>
-          Escolha como prefere usar o ClinAi. Sua escolha fica salva neste
-          dispositivo.
-        </p>
-        <div className="theme-options" role="group" aria-label="Tema">
-          {(
-            [
-              ["system", "Automático"],
-              ["light", "Claro"],
-              ["dark", "Escuro"],
-            ] as const
-          ).map(([value, label]) => (
-            <button
-              key={value}
-              aria-pressed={theme === value}
-              onClick={() => setTheme(value)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </Card>
-      <Card>
-        <div className="section-title">
-          <Accessibility />
-          <h2>Acessibilidade</h2>
-        </div>
-        <label className="checkbox">
-          <input
-            type="checkbox"
-            checked={large}
-            onChange={(e) => setLarge(e.target.checked)}
-          />
-          Ampliar o texto
-        </label>
-        <p>
-          O site também respeita o zoom do navegador e a navegação pelo teclado.
-        </p>
+        <h2>Preferências do site</h2>
+        <p>Personalize a aparência e os recursos de acessibilidade.</p>
+        <Forward to="/configuracoes">Abrir configurações</Forward>
       </Card>
       <Button
         secondary

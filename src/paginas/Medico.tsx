@@ -9,13 +9,13 @@ import {
   Page,
   Select,
   useAction,
-} from "../components/ui";
-import { service } from "../services/api";
-import { useApp } from "../state";
-import type { Appointment } from "../domain/types";
-import { dateLabel, getTimes, nextDates } from "./Booking";
-import { HealthSummary } from "./Auth";
-import { ReportSummary } from "./Triage";
+} from "../componentes/interface";
+import { service } from "../servicos/api";
+import { useApp } from "../estado";
+import type { Appointment } from "../dominio/tipos";
+import { dateLabel, getTimes, nextDates } from "./Agendamento";
+import { HealthSummary } from "./Autenticacao";
+import { ReportSummary } from "./PreTriagem";
 export function DoctorAgenda() {
   const { profile } = useApp();
   const [list, setList] = useState<Appointment[]>([]);
@@ -40,7 +40,7 @@ export function DoctorAgenda() {
     .sort((a, b) => a.time.localeCompare(b.time));
   const detail = appointments.find((a) => a.id === selected);
   return (
-    <Page title="Agenda do médico" subtitle={`${profile!.name} • Clínica JAM`}>
+    <Page title="Agenda do médico" subtitle={profile!.name}>
       <div className="agenda-toolbar">
         <Field
           label="Data da agenda"
@@ -75,7 +75,7 @@ export function DoctorAgenda() {
       )}
       <div className="booking-grid">
         <div>
-          {loading ? (
+          {error ? null : loading ? (
             <p>Carregando agenda…</p>
           ) : appointments.length ? (
             appointments.map((a) => (
@@ -104,10 +104,6 @@ export function DoctorAgenda() {
               <CalendarDays size={32} />
               <h2>Agenda livre</h2>
               <p>Nenhuma consulta para {dateLabel(date)}.</p>
-              <small>
-                Na demonstração, agende com Dr. Gustavo Melo pela área do
-                paciente para visualizar aqui.
-              </small>
             </Card>
           )}
         </div>
@@ -183,7 +179,7 @@ export function AvailabilityPage() {
   return (
     <Page
       title="Disponibilidade"
-      subtitle="Clínica JAM • consulta presencial"
+      subtitle="Organize seus horários de atendimento"
       back="/medico"
       narrow
     >

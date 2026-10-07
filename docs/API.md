@@ -1,44 +1,45 @@
-# Contrato de integração — proposta v1
+# Integração com a API ClinAi
 
-> Esta proposta ainda não corresponde às rotas implementadas em mateusxsv/clinai. Consulte [a revisão de alinhamento](ALINHAMENTO.md) antes de conectar o backend.
+Referência conferida: `mateusxsv/clinai`, commit `170674b0cbc31a573772d7d71f7895340f46b8a5` em 7 de outubro de 2026.
 
-Base: `VITE_API_BASE_URL`. Respostas de sucesso são JSON direto, sem envelope `data`. Datas são `YYYY-MM-DD`, horários `HH:mm`; por enquanto o front apresenta horários locais de Recife. O backend deve definir explicitamente o fuso `America/Recife` e manter esse contrato ou adaptar o cliente. IDs são strings. Erros: `{ "message": "mensagem legível" }` com status HTTP adequado.
+## Contrato implementado no frontend
 
-| Método | Rota                               | Entrada                                                          | Saída                                |
-| ------ | ---------------------------------- | ---------------------------------------------------------------- | ------------------------------------ |
-| POST   | /auth/login                        | email, password, role (`patient` ou `doctor`)                    | Profile                              |
-| POST   | /auth/register                     | dados de Profile sem id, mais password                           | Profile                              |
-| POST   | /auth/recover                      | email                                                            | 204                                  |
-| POST   | /auth/logout                       | —                                                                | 204                                  |
-| GET    | /me                                | —                                                                | Profile (401 sem sessão)             |
-| GET    | /doctors/:id/slots?date=YYYY-MM-DD | médico e data                                                    | string[] de horários HH:mm livres    |
-| GET    | /doctors                           | —                                                                | Doctor[]                             |
-| PUT    | /me                                | Profile                                                          | Profile atualizado                   |
-| GET    | /appointments                      | —                                                                | Appointment[] visíveis para a sessão |
-| POST   | /appointments                      | doctorId, patientName, date, time, plan, health, report opcional | Appointment                          |
-| PATCH  | /appointments/:id                  | status ou reviewed                                               | Appointment atualizado               |
-| GET    | /availability                      | —                                                                | Availability[]                       |
-| PUT    | /availability                      | date, start, end, duration                                       | 204                                  |
+`VITE_API_BASE_URL` aponta para a raiz do Express, sem `/api`. A única operação de dados liberada nesta revisão é `GET /medicos`.
 
-As interfaces completas e os campos obrigatórios estão em `src/domain/types.ts`. Exemplos fictícios estão em `src/services/mock.ts`.
+| Resposta do backend | Representação interna |
+| ------------------- | --------------------- |
+| `_id`               | `id`                  |
+| `nome`              | `name`                |
+| `especialidade`     | `specialty`           |
+| `clinica`           | `clinic`              |
+| `foto` (URL HTTPS)  | `image`               |
 
-## Responsabilidades do backend
+Notas, avaliações, valores e convênios não existem no modelo atual: não são preenchidos com dados fictícios. Uma lista vazia permanece vazia; erros não acionam um adaptador local. Mensagens de erro aceitam o campo `mensagem` usado pelo servidor.
 
-- Autenticação real, hash de senha e sessão por cookie HttpOnly/Secure. O front não protege recursos por si só; os guards de rota apenas organizam a navegação.
-- Autorizar cada acesso: paciente vê suas consultas; médico vê somente sua agenda e os resumos autorizados. Obter a identidade da sessão; não confiar em `patientName`, `role`, `id`, `reviewed` ou outros campos enviados pelo cliente como prova de permissão.
-- Validar campos, disponibilidade, datas futuras e conflitos de reserva atomicamente. Retornar 409 quando o horário já tiver sido ocupado; validar sobreposição pelo intervalo completo, não apenas pelo horário inicial.
-- O calendário consulta `/doctors/:id/slots?date=YYYY-MM-DD`. Retornar somente horários livres, sem nomes ou dados de outros pacientes. Uma lista vazia significa que não há horários; não há fallback fictício no modo HTTP. A reserva deve revalidar o horário atomicamente. Após falha de reserva, o front atualiza os horários para permitir nova escolha.
-- Usar CORS com a origem exata do frontend e credenciais habilitadas; aplicar proteção CSRF e política de cookies apropriada à hospedagem escolhida.
-- Definir retenção, consentimento, auditoria e proteção dos dados de saúde antes de uso real.
-- Implementar recuperação por e-mail e `GET /me` para restauração da sessão. O front aguarda a resposta antes de renderizar as rotas; 401 representa sessão ausente. Falhas de rede oferecem nova tentativa. Um 401 em recursos autenticados limpa a sessão da interface.
-- Salvar histórico atualizável separadamente do resumo associado ao agendamento. A consulta utiliza um snapshot do histórico confirmado naquele momento.
+As requisições têm timeout de 15 segundos. O catálogo público não envia cookies (`credentials: omit`), compatível com `cors()` atual. Isso precisará ser revisto junto à autenticação, não apenas alterado no cliente.
 
-## Integração incremental
+## Rotas existentes no backend
 
-1. Implementar login/cadastro e perfil, retornando os tipos definidos.
-2. Implementar catálogo de médicos e horários por profissional.
-3. Implementar reservas e transições de status com autorização no servidor.
-4. Implementar agenda, revisão e disponibilidade médica.
-5. Substituir mensagens de demonstração e condições ilustrativas somente após os serviços reais estarem funcionando.
+| Recurso      | Rotas                                | Integração nesta revisão                               |
+| ------------ | ------------------------------------ | ------------------------------------------------------ |
+| Médicos      | `/medicos`, `/medicos/:id`           | Leitura do catálogo                                    |
+| Pacientes    | `/pacientes`, `/pacientes/:id`       | Bloqueada: falta identidade e autorização              |
+| Pré-triagens | `/pre-triagens`, `/pre-triagens/:id` | Bloqueada: falta identidade e autorização              |
+| Consultas    | `/consultas`, `/consultas/:id`       | Bloqueada: falta agenda, autorização e reserva atômica |
 
-Nenhum endpoint de IA foi criado. A pré-triagem é coleta estruturada de relato, sem interpretação médica automática.
+Os recursos possuem POST, GET, GET por ID, PUT e DELETE. Não são equivalentes aos endpoints em inglês propostos nas versões anteriores deste documento.
+
+## Contratos a definir e implementar no backend
+
+1. Cadastro e autenticação com senha protegida, sessão verificável, encerramento e recuperação de acesso. Identidade e papel devem vir do servidor.
+2. Consulta e atualização do próprio perfil, com autorização em cada operação. Médico só pode acessar os pacientes e consultas que lhe cabem.
+3. Disponibilidade por médico e data, fuso horário acordado e exclusão de horários já reservados.
+4. Criação da pré-triagem associada ao paciente autenticado e da consulta com `paciente`, `medico`, `preTriagem`, `data` e `horario`.
+5. Confirmação/cancelamento com status permitidos e reserva protegida contra concorrência no servidor.
+6. Campos atualmente ausentes: e-mail e data de nascimento do paciente, histórico ampliado, revisão do resumo, eventual valor e convênio. A UI de cadastro também deverá incluir CPF e sexo exigidos pelo modelo atual.
+
+Não basta alterar `recursos` para `true`: as operações indisponíveis em `src/servicos/api.ts` devem ser implementadas e testadas com os contratos aprovados. Elas rejeitam a chamada com erro 501 e nunca fabricam IDs ou retornos de sucesso.
+
+## Critérios para liberar atendimento real
+
+Validar cadastro → login → sessão → pré-triagem → reserva → confirmação → cancelamento com duas contas de pacientes e uma de médico. Verificar isolamento de dados, duas reservas concorrentes para o mesmo horário, persistência após recarregar e encerramento real da sessão. Configurar HTTPS e CORS para a origem do frontend. Não colocar credenciais do MongoDB em nenhuma variável `VITE_*`.

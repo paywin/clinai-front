@@ -19,11 +19,10 @@ import {
   Page,
   Select,
   useAction,
-} from "../components/ui";
-import { service, isMock } from "../services/api";
-import { useApp } from "../state";
-import type { Appointment, Doctor, Availability } from "../domain/types";
-import { specialties } from "./Patient";
+} from "../componentes/interface";
+import { service, recursos } from "../servicos/api";
+import { useApp } from "../estado";
+import type { Appointment, Doctor, Availability } from "../dominio/tipos";
 export const dateLabel = (date: string) =>
   new Date(date + "T12:00:00").toLocaleDateString("pt-BR", {
     day: "2-digit",
@@ -39,7 +38,7 @@ export function nextDates() {
 }
 export function getTimes(v?: Availability) {
   if (v && (!Number.isFinite(v.duration) || v.duration <= 0)) return [];
-  if (!v) return ["09:00", "10:30", "11:00", "14:00", "15:30", "16:00"];
+  if (!v) return [];
   const start = Number(v.start.slice(0, 2)) * 60 + Number(v.start.slice(3));
   const end = Number(v.end.slice(0, 2)) * 60 + Number(v.end.slice(3));
   const times = [];
@@ -56,19 +55,17 @@ export function DoctorIdentity({ doctor }: { doctor: Doctor }) {
         <h2>{doctor.name}</h2>
         <p className="specialty-label">{doctor.specialty}</p>
         <p>
-          <MapPin size={15} /> {doctor.clinic} · Recife
+          <MapPin size={15} /> {doctor.clinic}
         </p>
-        <span className="rating">
-          <Star size={15} fill="currentColor" /> {doctor.rating.toFixed(1)}{" "}
-          <small>({doctor.reviews} avaliações)</small>
-        </span>
+        {doctor.rating !== undefined && doctor.reviews !== undefined && (
+          <span className="rating">
+            <Star size={15} fill="currentColor" /> {doctor.rating.toFixed(1)}{" "}
+            <small>({doctor.reviews} avaliações)</small>
+          </span>
+        )}
       </div>
       {doctor.image ? (
-        <img
-          className={"doctor-image " + (doctor.id === "joao" ? "flipped" : "")}
-          src={"/assets/" + doctor.image}
-          alt=""
-        />
+        <img className="doctor-image" src={doctor.image} alt="" />
       ) : (
         <span className="avatar">{doctor.initials}</span>
       )}
@@ -78,7 +75,7 @@ export function DoctorIdentity({ doctor }: { doctor: Doctor }) {
 export function Doctors() {
   const [q, setQ] = useSearchParams();
   const { profile } = useApp();
-  const favoriteKey = `clinai:favorites:${profile?.id}`;
+  const favoriteKey = `clinai:favorites:${profile?.id || "visitante"}`;
   const [favorites, setFavorites] = useState<string[]>(() => {
     try {
       const value = JSON.parse(localStorage.getItem(favoriteKey) || "[]");
@@ -101,7 +98,7 @@ export function Doctors() {
   const [term, setTerm] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [plan, setPlan] = useState("Todos");
-  const [sort, setSort] = useState("Mais bem avaliados");
+  const [sort, setSort] = useState("Nome");
   const [list, setList] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
   const { error, run } = useAction();
@@ -137,13 +134,15 @@ export function Doctors() {
     )
     .sort((a, b) =>
       sort === "Menor valor particular"
-        ? a.price - b.price
-        : b.rating - a.rating,
+        ? (a.price ?? Infinity) - (b.price ?? Infinity)
+        : sort === "Mais bem avaliados"
+          ? (b.rating ?? -1) - (a.rating ?? -1)
+          : a.name.localeCompare(b.name, "pt-BR"),
     );
   return (
     <Page
       title="Encontrar atendimento"
-      subtitle="Clínicas e profissionais • Recife"
+      subtitle="Encontre profissionais por nome, clínica ou especialidade"
     >
       <Card className="filters">
         <div className="search-field">
@@ -179,19 +178,19 @@ export function Doctors() {
             label="Especialidade"
             value={specialty}
             onChange={(v) => setQ(v === "Todas" ? {} : { especialidade: v })}
-            options={["Todas", ...specialties.map((s) => s[0])]}
+            options={[
+              "Todas",
+              ...new Set([
+                ...list.map((d) => d.specialty),
+                ...(specialty !== "Todas" ? [specialty] : []),
+              ]),
+            ]}
           />
           <Select
             label="Convênio"
             value={plan}
             onChange={setPlan}
-            options={[
-              "Todos",
-              "Unimed",
-              "Bradesco Saúde",
-              "SulAmérica",
-              "Particular",
-            ]}
+            options={["Todos", ...new Set(list.flatMap((d) => d.plans))]}
           />
         </div>
       </Card>
@@ -204,15 +203,25 @@ export function Doctors() {
       </button>
       <div className="results-heading">
         <p>
-          {loading
-            ? "Buscando profissionais…"
-            : `${results.length} ${results.length === 1 ? "profissional encontrado" : "profissionais encontrados"}`}
+          {error
+            ? "A busca não pôde ser concluída"
+            : loading
+              ? "Buscando profissionais…"
+              : `${results.length} ${results.length === 1 ? "profissional encontrado" : "profissionais encontrados"}`}
         </p>
         <Select
           label="Ordenar por"
           value={sort}
           onChange={setSort}
-          options={["Mais bem avaliados", "Menor valor particular"]}
+          options={[
+            "Nome",
+            ...(list.some((d) => d.rating !== undefined)
+              ? ["Mais bem avaliados"]
+              : []),
+            ...(list.some((d) => d.price !== undefined)
+              ? ["Menor valor particular"]
+              : []),
+          ]}
         />
       </div>
       <ErrorMessage message={error} />
@@ -237,11 +246,24 @@ export function Doctors() {
                 <span key={p}>{p}</span>
               ))}
             </div>
-            <div className="doctor-price">
-              <span>Consulta particular</span>
-              <strong>R$ {d.price}</strong>
-            </div>
-            <Forward to={"/medicos/" + d.id}>Ver perfil e horários</Forward>
+            {d.price !== undefined && (
+              <div className="doctor-price">
+                <span>Consulta particular</span>
+                <strong>
+                  {d.price.toLocaleString("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  })}
+                </strong>
+              </div>
+            )}
+            {recursos.agendamento ? (
+              <Forward to={"/medicos/" + d.id}>Ver perfil e horários</Forward>
+            ) : (
+              <p className="availability-note">
+                Agendamento online ainda indisponível.
+              </p>
+            )}
           </Card>
         ))}
       </div>
@@ -262,9 +284,6 @@ export function Doctors() {
             Limpar filtros
           </Button>
         </Card>
-      )}
-      {isMock && (
-        <small>Profissionais, avaliações, convênios e valores fictícios.</small>
       )}
     </Page>
   );
@@ -380,10 +399,10 @@ export function Book() {
           <p>
             {doctor.name}
             <br />
-            {doctor.clinic} · Recife
+            {doctor.clinic}
           </p>
           <span className="status scheduled">Agendada</span>
-          {isMock && <p>Agendamento local. Nenhuma clínica foi contatada.</p>}
+
           <Forward to="/consultas">Ver minhas consultas</Forward>
         </Card>
       ) : (
@@ -392,7 +411,7 @@ export function Book() {
             <DoctorIdentity doctor={doctor} />
             <details className="doctor-about">
               <summary>Sobre o atendimento e convênios</summary>
-              <p>Consulta presencial em {doctor.clinic}, Recife.</p>
+              <p>Consulta presencial em {doctor.clinic}.</p>
               <p>
                 Atendimento em {doctor.specialty.toLowerCase()}, com escuta e
                 acompanhamento individual.
@@ -409,7 +428,6 @@ export function Book() {
                   consulta.
                 </p>
               </div>
-              {isMock && <small>Perfil e disponibilidade ilustrativos.</small>}
             </details>
           </Card>
           <Card>
@@ -435,7 +453,9 @@ export function Book() {
                     <dt>Pagamento</dt>
                     <dd>
                       {plan}
-                      {plan === "Particular" ? ` · R$ ${doctor.price}` : ""}
+                      {plan === "Particular" && doctor.price !== undefined
+                        ? ` · R$ ${doctor.price}`
+                        : ""}
                     </dd>
                   </div>
                   <div>
@@ -608,7 +628,7 @@ export function Appointments() {
           Tentar novamente
         </Button>
       )}
-      {loading && !error ? (
+      {error ? null : loading ? (
         <p role="status">Carregando consultas…</p>
       ) : filtered.length === 0 ? (
         <Card className="empty">
@@ -691,7 +711,7 @@ export function Appointments() {
                     <strong>Paciente:</strong> {a.patientName}
                   </p>
                   <p>
-                    <strong>Modalidade:</strong> Presencial · Recife
+                    <strong>Modalidade:</strong> Presencial
                   </p>
                   <p>
                     <strong>Convênio:</strong> {a.plan}

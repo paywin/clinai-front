@@ -1,104 +1,68 @@
-# ClinAi — Frontend
+# Desenvolvimento do frontend ClinAi
 
-Frontend do projeto integrador ClinAi, baseado no [protótipo de baixa fidelidade](https://www.figma.com/design/aOoUkrXIJpt1gNSjmX8lHk/ClinAi-%E2%80%A2-Prot%C3%B3tipo-de-baixa-fidelidade?node-id=0-1). Este repositório contém somente o front. O backend poderá ser desenvolvido em outro repositório.
+React, TypeScript e Vite. A apresentação institucional está no [README](../README.md).
 
 ## Executar
 
-Requisito: Node.js 22 ou superior.
+Use uma versão atual do Node.js 22 e o lockfile do repositório.
 
 ```bash
 npm ci
+cp .env.example .env
 npm run dev
 ```
 
-Abra o endereço mostrado pelo Vite. Na tela de acesso, selecione Paciente ou Médico e use **Entrar na demonstração**. Não é necessário configurar servidor, banco ou chave de API.
+Defina `VITE_API_BASE_URL` com o endereço **HTTP do servidor Express**. Para o backend local na porta padrão, use `http://localhost:3000`, sem `/api`. Em celular, `localhost` aponta para o próprio celular; use o endereço do computador na rede. Em produção, use a URL HTTPS pública da API e gere um novo build após alterar a variável.
 
 ```bash
-npm test       # testes de fluxos e regras de agendamento
-npm run build # TypeScript + bundle para produção em dist/
+npm test
+npm run build
 npm run preview
 ```
 
-## Funcionalidades
-
-- Boas-vindas, seleção de perfil, login simulado e recuperação de acesso com confirmação explícita de que nenhum e-mail é enviado.
-- Cadastro em etapas, revisão e histórico de saúde com perguntas fixas e respostas atualizáveis.
-- Home do paciente com especialidades e atalhos para pré-triagem, histórico e consultas.
-- Pré-triagem: confirmação do histórico, sinais de alerta, relato, intensidade, outros sintomas e revisão. O botão SAMU usa `tel:192`. Não há diagnóstico, IA clínica ou classificação automática de risco.
-- Busca de profissionais por nome, clínica e especialidade; filtros de convênio; ordenação por avaliação ou preço particular.
-- Perfil do médico, calendário de 14 dias, seleção de horário e convênio, revisão e confirmação do agendamento.
-- Consultas: detalhes, confirmação de presença, cancelamento com revisão e listagem de canceladas.
-- Área do médico: agenda diária, resumo de saúde associado à consulta, marcação de revisão e edição de disponibilidade. No mock, o médico é Gustavo Melo.
-- Perfil editável, ampliação do texto, foco visível, navegação por teclado e layout com navegação inferior no celular.
-- Estados de carregamento, erro, vazio, sucesso e bloqueio de envio durante operações.
+Sem API configurada, o site abre normalmente e mostra um erro recuperável ao consultar profissionais. Não existe modo de demonstração nem fallback com médicos, contas ou consultas locais. `VITE_API_MODE` foi removida.
 
 ## Organização
 
-```text
-src/
-  components/ui.tsx   componentes reutilizáveis, layout e estados
-  domain/types.ts     contratos de dados e interface ClinAiService
-  pages/              telas de acesso, paciente, triagem, consultas e médico
-  services/api.ts     cliente HTTP e seleção do adaptador
-  services/mock.ts    demonstração sem servidor
-  state.tsx          sessão, relato e preferências da interface
-  tests/             testes de integração da interface e regras
-  styles.css         tokens, componentes e responsividade
-public/assets/       logo original fornecida pelo grupo
-```
+| Caminho                         | Responsabilidade                                                         |
+| ------------------------------- | ------------------------------------------------------------------------ |
+| `src/componentes/interface.tsx` | Componentes, navegação e estados de interface                            |
+| `src/componentes/VLibras.tsx`   | Carregamento opcional do tradutor                                        |
+| `src/dominio/tipos.ts`          | Tipos internos e interface de serviços                                   |
+| `src/dominio/saude.ts`          | Valores iniciais dos formulários                                         |
+| `src/paginas/`                  | Autenticação, paciente, médico, agendamento, pré-triagem e configurações |
+| `src/servicos/api.ts`           | Contrato HTTP e adaptação dos dados do backend                           |
+| `src/estado.tsx`                | Estado da interface e preferências                                       |
+| `src/testes/`                   | Testes do contrato e da interface                                        |
+| `src/estilos.css`               | Paleta, responsividade e acessibilidade                                  |
+| `src/principal.tsx`             | Rotas e inicialização                                                    |
 
-## Conectar o futuro backend
+Nomes convencionais exigidos pelas ferramentas (`package.json`, `index.html`, `tsconfig.json`, `vite.config.ts`, `src`, `public`) foram preservados. Os tipos de apresentação ainda possuem propriedades internas em inglês; o adaptador converte os campos reais em português, sem exigir mudanças no backend para listar médicos.
 
-Copie `.env.example` para `.env` e configure:
+## O que funciona nesta revisão
 
-```dotenv
-VITE_API_MODE=http
-VITE_API_BASE_URL=https://seu-backend.example.com/api
-```
+- Catálogo conectado a `GET /medicos`, com busca, especialidades e favoritos neste navegador.
+- Estados de carregamento, lista vazia, erro de rede e nova tentativa.
+- Configurações acessíveis antes do login, temas claro/escuro/automático e preferências persistentes.
+- Checkbox geral para recursos extras, texto ampliado, contraste, redução de movimento e opção de Libras.
+- Teclado, foco e zoom continuam disponíveis quando os recursos extras estão desativados.
 
-As telas usam `ClinAiService`; não precisam conhecer URLs de endpoints. O cliente HTTP já usa JSON, timeout de 15 segundos, tratamento de erro e cookies via `credentials: include`. Veja [o contrato da API](API.md) para implementar o backend. Alterações no contrato devem ser refletidas em `src/domain/types.ts` e no adaptador, preservando as telas.
+O script oficial do VLibras só é carregado após a opção do usuário. Desativar oculta o widget; não descarrega código de terceiros já executado. Para descarregar completamente, desative e recarregue a página. [Documentação oficial](https://vlibras.gov.br/doc/widget/installation/webpageintegration.html).
 
-As variáveis `VITE_*` são públicas no bundle. Nunca coloque senhas de banco, tokens privados ou chaves de IA nelas.
+## Integração ainda pendente
 
-## Demonstração e persistência
+Login, cadastro, recuperação, sessões, agenda e agendamentos **não estão liberados**. O backend atual não tem autenticação, autorização por usuário nem disponibilidade. As telas foram preservadas para integração futura, mas não produzem sucesso falso nem guardam dados clínicos como se estivessem salvos no banco.
 
-Em `npm run dev` e nos testes, o padrão é `mock`; builds de produção usam HTTP por padrão. Para prévia local simulada de um build, configure explicitamente `VITE_API_MODE=mock` antes de compilar. Não publique essa configuração como atendimento real. Médicos, notas, convênios e valores são fictícios. O login aceita e-mail válido e senha com pelo menos seis caracteres; o cadastro exige oito. Isso valida a interface, não autentica usuários. Senhas não são persistidas.
+Confira [API](API.md) e [alinhamento com o backend](ALINHAMENTO.md). Concluir esses serviços e validá-los em ambiente integrado é necessário antes de apresentar o produto como pronto para atendimento real.
 
-Perfil, sessão, histórico, relatos agendados, consultas e disponibilidade ficam em `sessionStorage`, apenas na aba atual. Os dados sobrevivem ao recarregamento e à troca entre os perfis de paciente/médico na mesma aba. Fechar a sessão da aba encerra essa persistência; ela não equivale a banco de dados. O modo HTTP não usa o armazenamento mock. Não use informações pessoais ou de saúde reais nesta versão.
+## Dados e publicação
 
-Para demonstrar a agenda médica: entre como paciente, agende com Gustavo Melo, saia e entre como médico na mesma aba. A consulta aparecerá na data escolhida. A disponibilidade cadastrada pelo médico altera os horários do calendário de Gustavo; reservas existentes permanecem registradas.
+Somente preferências e IDs de favoritos ficam no armazenamento local. Sessões e dados da antiga demonstração são limpos do `sessionStorage`. O frontend não armazena senhas, históricos ou consultas nesse armazenamento.
 
-## Publicação
+`MONGODB_URI` deve ser definida exclusivamente no ambiente do backend. Nunca use `VITE_MONGODB_URI`. Credenciais compartilhadas devem ser substituídas no Atlas e retiradas dos logs do servidor.
 
-O build é estático (`dist/`) e não requer backend para o modo demo. O servidor de hospedagem deve redirecionar rotas desconhecidas para `index.html`, pois o projeto usa BrowserRouter. A hospedagem ainda não foi configurada neste repositório.
+O servidor estático precisa redirecionar rotas do frontend para `index.html` (BrowserRouter). Não publique a API clínica atual para uso real antes de implementar autenticação e autorização. Nesta revisão não foram feitas conexão com o Atlas, implantação nem alterações no repositório do backend.
 
-## Referência visual e limites da validação
+## Validação
 
-Foram mantidas a paleta verde-petróleo (`#073d43`), a cor primária (`#006c67`), Poppins, os fluxos principais e a hierarquia do protótipo. A composição foi adaptada para desktop e os controles foram tornados funcionais. A logo é o arquivo original enviado pelo grupo.
-
-O limite do plano do Figma impediu a leitura detalhada de algumas telas. Os downloads de três imagens ilustrativas de especialidades falharam; os cards usam iniciais como fallback e permitem receber uma imagem pelo campo `Doctor.image`. Esses assets devem ser conferidos quando o acesso estiver disponível.
-
-O build TypeScript e os testes DOM podem ser executados pelos comandos acima. A abertura da prévia local no navegador remoto foi bloqueada pelo ambiente; a conferência visual final em celular e desktop permanece pendente. Não se afirma equivalência pixel a pixel ao Figma.
-
-## Atualização mobile — setembro de 2026
-
-A experiência prioriza celular e tablet em modo retrato (até 900 px):
-
-- Home com especialidades no início, seguida de pré-triagem e atalhos de saúde.
-- Navegação inferior com área ativa destacada também nas telas internas.
-- Cabeçalho compacto, cartões com cantos arredondados e textos maiores.
-- Filtros recolhíveis com contador; seleção preservada ao abrir e fechar.
-- Calendário horizontal com dias de 66 px de largura e horários de pelo menos 52 px de altura.
-- Campos de 16 px, teclado apropriado para e-mail/telefone e formulários em uma coluna.
-- Margens para recortes da tela e barra de gestos (`safe-area-inset`), sem bloquear o zoom.
-- Regras específicas para 320–360 px, tablets e texto ampliado.
-
-Validação desta atualização: build TypeScript e testes DOM de fluxos. A prévia local retornou `ERR_BLOCKED_BY_CLIENT` no navegador remoto. A verificação visual em aparelho real, incluindo teclado virtual, rotação e zoom, continua pendente; os testes DOM não medem geometria ou responsividade.
-
-## Atualização de outubro de 2026
-
-Nova logo em cabeçalhos, boas-vindas e favicon. Temas claro, escuro e automático, preferências persistentes de texto, mostrar/ocultar senha, aviso de falta de conexão, favoritos por conta neste dispositivo e próxima consulta na home. Consultas separadas em próximas, anteriores e canceladas. Favoritos e preferências são locais e não sincronizam entre dispositivos.
-
-O modo HTTP restaura sessão por GET /me, trata expiração e consulta horários por médico/data sem gerar disponibilidade fictícia. O backend ainda precisa implementar o contrato: autenticação, e-mails, reservas e persistência reais dependem dele. O ambiente local continua explicitamente identificado.
-
-Validação desta revisão: build de produção e testes de fluxo/contrato HTTP aprovados. A conferência visual segue pendente: o ambiente bloqueou a abertura de porta local (EPERM) e não possui o executável do Chromium para Playwright.
+Os testes verificam respostas HTTP controladas, contrato de médicos, ausência de dados inventados, indisponibilidade explícita dos fluxos pendentes, persistência das preferências e ativação opcional de Libras. O build verifica TypeScript e geração dos arquivos de produção. Esses testes não demonstram conexão com o banco, envio de e-mails ou reserva real.
