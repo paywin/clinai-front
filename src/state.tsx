@@ -119,13 +119,13 @@ export function Provider({ children }: { children: ReactNode }) {
           <main className="session-screen">
             <img
               className="logo-on-light"
-              src="/assets/clinai-mark.png"
+              src="/assets/clinai-logo.png"
               alt="ClinAi"
               width="100"
             />
             <img
               className="logo-on-dark"
-              src="/assets/logo.png"
+              src="/assets/logo-white.png"
               alt="ClinAi"
               width="100"
             />

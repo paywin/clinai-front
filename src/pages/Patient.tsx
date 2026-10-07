@@ -182,7 +182,7 @@ export function Profile() {
   const [saved, setSaved] = useState(false);
   const { busy, error, run } = useAction();
   return (
-    <Page title="Meu perfil" subtitle="Seus dados e preferências" narrow>
+    <Page title="Meu perfil" subtitle="Seus dados e preferências">
       <Card>
         <div className="profile-heading">
           <span className="avatar">{profile!.name.charAt(0)}</span>

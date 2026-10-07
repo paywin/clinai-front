@@ -35,7 +35,7 @@ export function Welcome() {
           />
           <img
             className="welcome-logo logo-on-dark"
-            src="/assets/logo.png"
+            src="/assets/logo-white-clinai.png"
             alt="Logo ClinAi"
           />
         </div>

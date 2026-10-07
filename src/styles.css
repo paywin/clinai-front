@@ -1727,6 +1727,17 @@ p,
   background: transparent;
   border-radius: 12px;
 }
+.brand-logo-full {
+  width: 180px;
+  height: auto;
+  object-fit: contain;
+  background: transparent;
+  border-radius: 0;
+}
+.sidebar .brand-logo-full {
+  width: 180px;
+  height: auto;
+}
 .welcome-logo {
   object-fit: contain;
   aspect-ratio: 416/358;
@@ -2023,4 +2034,31 @@ p,
     line-height: 1.65;
     margin-bottom: 20px;
   }
+}
+.accessibility-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.font-size-button {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: inherit;
+  min-width: 38px;
+  height: 36px;
+  padding: 0 8px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.font-size-button:hover {
+  background: rgba(0, 108, 103, 0.08);
+}
+
+.font-size-button[aria-pressed="true"] {
+  background: var(--brand);
+  color: white;
+  border-color: var(--brand);
 }
