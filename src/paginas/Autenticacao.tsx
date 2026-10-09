@@ -87,22 +87,6 @@ export function Login() {
   const { setProfile } = useApp();
   const nav = useNavigate();
   const { busy, error, run } = useAction();
-  if (!recursos.autenticacao)
-    return (
-      <Page
-        title="Acesso à conta"
-        subtitle="Seu espaço de cuidado"
-        back="/acesso"
-        narrow
-      >
-        <Card>
-          <h2>Acesso indisponível no momento</h2>
-          <p>{mensagemAcesso}</p>
-          <Forward to="/medicos">Consultar profissionais</Forward>
-          <Forward to="/configuracoes">Configurações de acessibilidade</Forward>
-        </Card>
-      </Page>
-    );
   const login = () =>
     run(async () => {
       setProfile(await service.login(email, password, role));
@@ -146,7 +130,14 @@ export function Login() {
           <Link className="text-link" to="/recuperar">
             Esqueci minha senha
           </Link>
-          <ErrorMessage message={error} />
+          <ErrorMessage
+            message={
+              error ||
+              (!recursos.autenticacao
+                ? "O serviço de acesso está indisponível no momento. Tente novamente mais tarde."
+                : "")
+            }
+          />
           <Button type="submit" disabled={busy}>
             {busy ? "Entrando…" : "Entrar"}
           </Button>
