@@ -2249,3 +2249,88 @@ html[data-movimento-reduzido="true"] *::after {
   --line: #93afb5;
   --brand: #78eddb;
 }
+
+/* Próximo atendimento: largura e espaçamento acompanham a grade da página. */
+.upcoming-appointments {
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: linear-gradient(135deg, #effaf8, var(--paper));
+}
+.upcoming-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+  color: var(--brand);
+}
+.upcoming-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.upcoming-header h2 {
+  margin: 0;
+  font-size: 1.375rem;
+  color: var(--dark);
+}
+.upcoming-header > svg,
+.upcoming-detail > svg {
+  flex-shrink: 0;
+}
+.upcoming-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px;
+  border-radius: 14px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+}
+.upcoming-info {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.upcoming-detail {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow-wrap: anywhere;
+}
+.upcoming-button {
+  width: auto;
+  flex-shrink: 0;
+  margin: 0;
+}
+.upcoming-empty {
+  margin: 0;
+  color: var(--muted);
+}
+[data-theme="dark"] .upcoming-appointments {
+  background: linear-gradient(135deg, #203b40, var(--paper));
+}
+@media (max-width: 600px) {
+  .upcoming-appointments {
+    padding: 16px;
+  }
+  .upcoming-header h2 {
+    font-size: 1.125rem;
+  }
+  .upcoming-item {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 16px;
+  }
+  .upcoming-button {
+    width: 100%;
+  }
+}
+.large .upcoming-item {
+  align-items: stretch;
+  flex-direction: column;
+}
