@@ -1,9 +1,9 @@
+import { apresentacaoService } from "./apresentacao";
 /// <reference types="vite/client" />
 import type { ClinAiService, Doctor } from "../dominio/tipos";
 
-// Capacidades conferidas em mateusxsv/clinai. Ative novos fluxos somente
-// depois de implementar autenticação, autorização e o contrato no servidor.
-export const recursos = { autenticacao: false, agendamento: false } as const;
+// Esta branch é exclusiva para apresentação com dados locais fictícios.
+export const recursos = { autenticacao: true, agendamento: true } as const;
 export const mensagemAcesso =
   "O acesso às contas ainda não está disponível. Você pode consultar os profissionais cadastrados e personalizar o site.";
 
@@ -161,4 +161,4 @@ export const httpService: ClinAiService = {
   saveAvailability: indisponivel,
   logout: indisponivel,
 };
-export const service = httpService;
+export const service = apresentacaoService;

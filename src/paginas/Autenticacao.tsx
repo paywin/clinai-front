@@ -30,12 +30,12 @@ export function Welcome() {
         <div className="welcome-mark">
           <img
             className="welcome-logo logo-on-light"
-            src="/assets/clinai-mark.png"
+            src={import.meta.env.BASE_URL + "assets/clinai-mark.png"}
             alt="Logo ClinAi"
           />
           <img
             className="welcome-logo logo-on-dark"
-            src="/assets/logo-white-clinai.png"
+            src={import.meta.env.BASE_URL + "assets/logo-white-clinai.png"}
             alt="Logo ClinAi"
           />
         </div>
@@ -142,6 +142,29 @@ export function Login() {
             {busy ? "Entrando…" : "Entrar"}
           </Button>
         </form>
+        <p className="center">
+          Apresentação com dados fictícios. Não use dados pessoais.
+        </p>
+        <Button
+          type="button"
+          disabled={busy}
+          onClick={() =>
+            void run(async () => {
+              setProfile(
+                await service.login(
+                  role === "doctor"
+                    ? "gustavo@exemplo.com"
+                    : "maria@exemplo.com",
+                  "apresentacao",
+                  role,
+                ),
+              );
+              nav(role === "doctor" ? "/medico" : "/inicio");
+            })
+          }
+        >
+          Entrar na apresentação
+        </Button>
         {role === "patient" && (
           <p className="center">
             Ainda não tem uma conta?{" "}
@@ -184,10 +207,10 @@ export function Recover() {
         {sent ? (
           <>
             <CheckCircle2 className="success-icon" />
-            <h2>Confira seu e-mail</h2>
+            <h2>Exemplo de recuperação</h2>
             <p>
-              Se o e-mail estiver cadastrado, você receberá instruções para
-              recuperar seu acesso.
+              Nesta apresentação nenhum e-mail é enviado. Volte ao login e use o
+              botão de apresentação.
             </p>
             <Forward to="/entrar">Voltar para entrar</Forward>
           </>

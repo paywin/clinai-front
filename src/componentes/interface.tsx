@@ -217,7 +217,7 @@ export function Layout({ children }: { children: ReactNode }) {
         >
           <img
             className="brand-logo brand-logo-full"
-            src="/assets/logo-white.png"
+            src={import.meta.env.BASE_URL + "assets/logo-white.png"}
             alt="ClinAi"
           />
         </Link>
@@ -297,7 +297,11 @@ export function Layout({ children }: { children: ReactNode }) {
             to={profile ? (doctor ? "/medico" : "/inicio") : "/"}
             aria-label="ClinAi — início"
           >
-            <img className="brand-logo" src="/assets/logo.png" alt="" />
+            <img
+              className="brand-logo"
+              src={import.meta.env.BASE_URL + "assets/logo.png"}
+              alt=""
+            />
             <span>ClinAi</span>
           </Link>
           <span className="portal-label">

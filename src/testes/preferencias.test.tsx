@@ -67,7 +67,7 @@ it("carrega Libras somente ao optar e não duplica o script", async () => {
   await user.click(screen.getByLabelText(/Quero usar recursos/));
   expect(document.querySelectorAll("#clinai-vlibras").length).toBe(1);
 });
-it("tolera preferências inválidas e remove a sessão da antiga demonstração", async () => {
+it("tolera preferências inválidas sem apagar dados de outras versões", async () => {
   localStorage.setItem("clinai:acessibilidade", '{"ativa":"false"}');
   sessionStorage.setItem("clinai:session", '{"name":"Identidade local"}');
   mount();
@@ -75,50 +75,63 @@ it("tolera preferências inválidas e remove a sessão da antiga demonstração"
     (screen.getByLabelText(/Quero usar recursos/) as HTMLInputElement).checked,
   ).toBe(false);
   await waitFor(() =>
-    expect(sessionStorage.getItem("clinai:session")).toBeNull(),
+    expect(sessionStorage.getItem("clinai:session")).not.toBeNull(),
   );
 });
-it("mantém o login padrão com aviso quando a integração está indisponível", () => {
+it("mantém o login padrão e oferece acesso à apresentação", () => {
   mount(<Login />);
   expect(screen.getByLabelText("E-mail")).toBeTruthy();
   expect(screen.getByLabelText("Senha")).toBeTruthy();
   expect(screen.getByRole("button", { name: "Entrar" })).toBeTruthy();
-  expect(screen.getByRole("link", { name: "Esqueci minha senha" })).toBeTruthy();
-  expect(screen.getByRole("alert").textContent).toContain("serviço de acesso está indisponível");
-  expect(screen.queryByRole("link", { name: "Consultar profissionais" })).toBeNull();
+  expect(
+    screen.getByRole("link", { name: "Esqueci minha senha" }),
+  ).toBeTruthy();
+  expect(
+    screen.getByRole("button", { name: "Entrar na apresentação" }),
+  ).toBeTruthy();
+  expect(
+    screen.queryByRole("link", { name: "Consultar profissionais" }),
+  ).toBeNull();
   expect(screen.queryByText(/Entrar na demonstração/)).toBeNull();
 });
 it("mostra a falha do serviço dentro do formulário e preserva os campos", async () => {
   const user = userEvent.setup();
-  const login = vi.spyOn(service, "login").mockRejectedValue(new Error("Não foi possível conectar ao serviço."));
+  const login = vi
+    .spyOn(service, "login")
+    .mockRejectedValue(new Error("Não foi possível conectar ao serviço."));
   mount(<Login />);
   await user.type(screen.getByLabelText("E-mail"), "paciente@example.com");
   await user.type(screen.getByLabelText("Senha"), "senha123");
   await user.click(screen.getByRole("button", { name: "Entrar" }));
-  await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("Não foi possível conectar ao serviço."));
-  expect(login).toHaveBeenCalledWith("paciente@example.com", "senha123", "patient");
-  expect((screen.getByLabelText("E-mail") as HTMLInputElement).value).toBe("paciente@example.com");
-  expect((screen.getByLabelText("Senha") as HTMLInputElement).type).toBe("password");
-  expect((screen.getByRole("button", { name: "Entrar" }) as HTMLButtonElement).disabled).toBe(false);
-});
-it("exibe médicos reais sem avaliações e preços fictícios", async () => {
-  vi.stubGlobal(
-    "fetch",
-    vi
-      .fn()
-      .mockResolvedValue(
-        new Response(
-          '[{"_id":"abc","nome":"Ana Silva","especialidade":"Cardiologia"}]',
-        ),
-      ),
+  await waitFor(() =>
+    expect(screen.getByRole("alert").textContent).toBe(
+      "Não foi possível conectar ao serviço.",
+    ),
   );
-  mount(<Doctors />);
-  await screen.findByRole("heading", { name: "Ana Silva" });
-  expect(screen.queryByText(/avaliações/)).toBeNull();
-  expect(screen.queryByText(/R\$/)).toBeNull();
+  expect(login).toHaveBeenCalledWith(
+    "paciente@example.com",
+    "senha123",
+    "patient",
+  );
+  expect((screen.getByLabelText("E-mail") as HTMLInputElement).value).toBe(
+    "paciente@example.com",
+  );
+  expect((screen.getByLabelText("Senha") as HTMLInputElement).type).toBe(
+    "password",
+  );
   expect(
-    screen.getByText("Agendamento online ainda indisponível."),
-  ).toBeTruthy();
+    (screen.getByRole("button", { name: "Entrar" }) as HTMLButtonElement)
+      .disabled,
+  ).toBe(false);
+});
+it("exibe o catálogo local sem precisar de rede", async () => {
+  const fetcher = vi.fn(() => {
+    throw new Error("Rede indisponível");
+  });
+  vi.stubGlobal("fetch", fetcher);
+  mount(<Doctors />);
+  await screen.findByRole("heading", { name: "Dr. Gustavo Melo" });
+  expect(fetcher).not.toHaveBeenCalled();
 });
 it("permite revelar e ocultar senha preservando o valor", async () => {
   const user = userEvent.setup();

@@ -71,11 +71,6 @@ export function Provider({ children }: { children: ReactNode }) {
       .finally(() => {
         if (atual) setReady(true);
       });
-    // Limpa os dados da antiga demonstração, sem tocar nas preferências.
-    try {
-      for (const chave of Object.keys(sessionStorage))
-        if (chave.startsWith("clinai:")) sessionStorage.removeItem(chave);
-    } catch {}
     const expirar = () => {
       setProfile(null);
       setReport(undefined);

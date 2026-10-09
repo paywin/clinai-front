@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { httpService, request, service } from "../servicos/api";
+import { httpService, request, httpService as service } from "../servicos/api";
 beforeEach(() => vi.stubEnv("VITE_API_BASE_URL", "https://api.example.com"));
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -8,20 +8,18 @@ afterEach(() => {
 });
 describe("Contrato real do backend", () => {
   it("consulta /medicos e converte o cadastro sem inventar valores", async () => {
-    const fetcher = vi
-      .fn()
-      .mockResolvedValue(
-        new Response(
-          JSON.stringify([
-            {
-              _id: "abc",
-              nome: "Ana Silva",
-              especialidade: "Cardiologia",
-              clinica: "Clínica Central",
-            },
-          ]),
-        ),
-      );
+    const fetcher = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify([
+          {
+            _id: "abc",
+            nome: "Ana Silva",
+            especialidade: "Cardiologia",
+            clinica: "Clínica Central",
+          },
+        ]),
+      ),
+    );
     vi.stubGlobal("fetch", fetcher);
     const [medico] = await service.getDoctors();
     expect(fetcher.mock.calls[0][0]).toBe("https://api.example.com/medicos");
