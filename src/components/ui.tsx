@@ -216,7 +216,7 @@ export function Layout({ children }: { children: ReactNode }) {
           to={profile ? (doctor ? "/medico" : "/inicio") : "/"}
           className="brand"
         >
-          <img className="brand-logo" src="/assets/logo.png" alt="" />
+          <img className="brand-logo" src={import.meta.env.BASE_URL + "assets/logo.png"} alt="" />
           <span>
             Clin<span>Ai</span>
           </span>
@@ -288,7 +288,7 @@ export function Layout({ children }: { children: ReactNode }) {
             className="mobile-brand"
             aria-label="ClinAi — início"
           >
-            <img className="brand-logo" src="/assets/logo.png" alt="" /> Clin
+            <img className="brand-logo" src={import.meta.env.BASE_URL + "assets/logo.png"} alt="" /> Clin
             <span>Ai</span>
           </Link>
           <span>

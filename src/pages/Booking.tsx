@@ -66,7 +66,7 @@ export function DoctorIdentity({ doctor }: { doctor: Doctor }) {
       {doctor.image ? (
         <img
           className={"doctor-image " + (doctor.id === "joao" ? "flipped" : "")}
-          src={"/assets/" + doctor.image}
+          src={import.meta.env.BASE_URL + "assets/" + doctor.image}
           alt=""
         />
       ) : (

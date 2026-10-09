@@ -1,8 +1,9 @@
 import type { ClinAiService } from "../domain/types";
 import { mockService } from "./mock";
-const env = (import.meta as unknown as { env: Record<string, string> }).env;
+const env = import.meta.env;
 export const isMock =
   env.VITE_API_MODE === "mock" ||
+  env.MODE === "pages" ||
   (env.DEV && env.VITE_API_MODE !== "http") ||
   env.MODE === "test";
 export class ApiError extends Error {

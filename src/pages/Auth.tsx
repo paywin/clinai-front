@@ -30,12 +30,12 @@ export function Welcome() {
         <div className="welcome-mark">
           <img
             className="welcome-logo logo-on-light"
-            src="/assets/clinai-mark.png"
+            src={import.meta.env.BASE_URL + "assets/clinai-mark.png"}
             alt="Logo ClinAi"
           />
           <img
             className="welcome-logo logo-on-dark"
-            src="/assets/logo.png"
+            src={import.meta.env.BASE_URL + "assets/logo.png"}
             alt="Logo ClinAi"
           />
         </div>
