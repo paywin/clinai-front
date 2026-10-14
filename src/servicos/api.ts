@@ -3,7 +3,7 @@ import type { ClinAiService, Doctor } from "../dominio/tipos";
 
 // Capacidades conferidas em mateusxsv/clinai. Ative novos fluxos somente
 // depois de implementar autenticação, autorização e o contrato no servidor.
-export const recursos = { autenticacao: false, agendamento: false } as const;
+export const recursos = { autenticacao: true, agendamento: true } as const;
 export const mensagemAcesso =
   "O acesso às contas ainda não está disponível. Você pode consultar os profissionais cadastrados e personalizar o site.";
 
@@ -17,27 +17,43 @@ export class ApiError extends Error {
 }
 function enderecoApi() {
   const value = import.meta.env.VITE_API_BASE_URL?.trim();
-  if (!value)
-    throw new ApiError(
-      "O serviço de atendimento ainda não está conectado. Tente novamente mais tarde.",
-      503,
-    );
+
+  if (!value) {
+    return "/api";
+  }
+
+  // Permite usar /api na Vercel
+  if (value.startsWith("/")) {
+    return value.replace(/\/$/, "");
+  }
+
   let url: URL;
+
   try {
     url = new URL(value);
   } catch {
-    throw new ApiError("O endereço do serviço de atendimento é inválido.", 503);
+    throw new ApiError(
+      "O endereço do serviço de atendimento é inválido.",
+      503,
+    );
   }
+
   if (
     !["http:", "https:"].includes(url.protocol) ||
     url.username ||
     url.password ||
     url.search ||
     url.hash
-  )
-    throw new ApiError("O endereço do serviço de atendimento é inválido.", 503);
+  ) {
+    throw new ApiError(
+      "O endereço do serviço de atendimento é inválido.",
+      503,
+    );
+  }
+
   return value.replace(/\/$/, "");
 }
+
 export async function request<T>(
   path: string,
   method = "GET",
@@ -50,7 +66,7 @@ export async function request<T>(
     const response = await fetch(`${base}${path}`, {
       method,
       // A API atual usa CORS público e não implementa sessões.
-      credentials: "omit",
+      credentials: "include",
       headers:
         body === undefined
           ? { Accept: "application/json" }
@@ -141,24 +157,82 @@ async function indisponivel(): Promise<never> {
   );
 }
 export const httpService: ClinAiService = {
-  // Não cria nem restaura identidades locais: o backend ainda não oferece sessão.
-  getSession: async () => null,
+  getSession: async () => {
+    try {
+      return await request("/me");
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        return null;
+      }
+
+      throw error;
+    }
+  },
+
   getDoctors: async () => {
-    const values = await request<MedicoApi[]>("/medicos");
-    if (!Array.isArray(values))
-      throw new ApiError("Não foi possível ler a lista de profissionais.", 502);
+    const values = await request<MedicoApi[]>("/doctors");
+
+    if (!Array.isArray(values)) {
+      throw new ApiError(
+        "Não foi possível ler a lista de profissionais.",
+        502,
+      );
+    }
+
     return values.map(adaptarMedico);
   },
-  getSlots: indisponivel,
-  login: indisponivel,
-  register: indisponivel,
+
+  getSlots: async (doctorId, date) => {
+  return await request<string[]>(
+    `/doctors/${doctorId}/slots?date=${encodeURIComponent(date)}`,
+  );
+},
+
+  login: async (email, password, role) => {
+    return await request("/auth/login", "POST", {
+      email,
+      password,
+      role,
+    });
+  },
+
+  register: async (profile, password) => {
+    return await request("/auth/register", "POST", {
+      ...profile,
+      password,
+    });
+  },
+
   recover: indisponivel,
+
   saveProfile: indisponivel,
-  getAppointments: indisponivel,
-  book: indisponivel,
-  updateAppointment: indisponivel,
+
+  getAppointments: async () => {
+  return await request("/appointments");
+  },
+
+  book: async (input) => {
+  return await request(
+    "/appointments",
+    "POST",
+    input,
+  );
+  },
+
+  updateAppointment: async (id, patch) => {
+  return await request(
+    `/appointments/${id}`,
+    "PATCH",
+    patch,
+  );
+  },
+
   getAvailability: indisponivel,
+
   saveAvailability: indisponivel,
-  logout: indisponivel,
+
+  logout: async () => {
+    await request("/auth/logout", "POST");
+  },
 };
 export const service = httpService;
