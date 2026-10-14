@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { CalendarDays, CheckCircle2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { CalendarDays, Clock3, UserRound, CheckCircle2 } from "lucide-react";
 import {
   Button,
   Card,
@@ -16,20 +16,50 @@ import type { Appointment } from "../dominio/tipos";
 import { dateLabel, getTimes, nextDates } from "./Agendamento";
 import { HealthSummary } from "./Autenticacao";
 import { ReportSummary } from "./PreTriagem";
+// Datas da agenda seguem o fuso de Recife (UTC−3), como o restante do portal.
+export function getNextAppointment(
+  list: Appointment[],
+  doctorId: string,
+  now = Date.now(),
+) {
+  return list
+    .filter((a) => a.doctorId === doctorId && a.status !== "cancelled")
+    .map((appointment) => ({
+      appointment,
+      timestamp: Date.parse(`${appointment.date}T${appointment.time}-03:00`),
+    }))
+    .filter(({ timestamp }) => Number.isFinite(timestamp) && timestamp >= now)
+    .sort((a, b) => a.timestamp - b.timestamp)[0]?.appointment;
+}
 export function DoctorAgenda() {
   const { profile } = useApp();
   const [list, setList] = useState<Appointment[]>([]);
   const [date, setDate] = useState(nextDates()[0]);
   const [selected, setSelected] = useState<string>();
   const [loading, setLoading] = useState(true);
+  const [now, setNow] = useState(Date.now);
+  const summaryHeading = useRef<HTMLHeadingElement>(null);
   const { busy, error, run } = useAction();
   const load = async () => {
-    setList(await service.getAppointments());
-    setLoading(false);
+    setLoading(true);
+    try {
+      setList(await service.getAppointments());
+      setNow(Date.now());
+    } finally {
+      setLoading(false);
+    }
   };
   useEffect(() => {
     void run(load);
   }, []);
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 30000);
+    return () => window.clearInterval(timer);
+  }, []);
+  useEffect(() => {
+    if (selected) summaryHeading.current?.focus();
+  }, [selected]);
+  const nextAppointment = getNextAppointment(list, profile!.id, now);
   const appointments = list
     .filter(
       (a) =>
@@ -67,6 +97,60 @@ export function DoctorAgenda() {
           <span>Resumos revisados</span>
         </Card>
       </div>
+      <section
+        className="upcoming-appointments"
+        aria-labelledby="next-appointment-title"
+      >
+        <div className="upcoming-header">
+          <div>
+            <span className="upcoming-label">PRÓXIMO ATENDIMENTO</span>
+            <h2 id="next-appointment-title">
+              Prepare-se para a próxima consulta
+            </h2>
+          </div>
+          <CalendarDays size={32} aria-hidden="true" />
+        </div>
+        {loading ? (
+          <p className="upcoming-empty" role="status">
+            Buscando o próximo atendimento…
+          </p>
+        ) : error ? (
+          <p className="upcoming-empty">
+            Não foi possível consultar o próximo atendimento.
+          </p>
+        ) : nextAppointment ? (
+          <div className="upcoming-item">
+            <div className="upcoming-info">
+              <div className="upcoming-detail">
+                <CalendarDays size={18} aria-hidden="true" />
+                <time dateTime={nextAppointment.date}>
+                  {dateLabel(nextAppointment.date)}
+                </time>
+              </div>
+              <div className="upcoming-detail">
+                <Clock3 size={18} aria-hidden="true" />
+                <span>{nextAppointment.time}</span>
+              </div>
+              <div className="upcoming-detail">
+                <UserRound size={18} aria-hidden="true" />
+                <span>{nextAppointment.patientName}</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="button upcoming-button"
+              onClick={() => {
+                setDate(nextAppointment.date);
+                setSelected(nextAppointment.id);
+              }}
+            >
+              Abrir resumo <span aria-hidden="true">→</span>
+            </button>
+          </div>
+        ) : (
+          <p className="upcoming-empty">Não há consultas futuras agendadas.</p>
+        )}
+      </section>
       <ErrorMessage message={error} />
       {error && (
         <Button secondary onClick={() => void run(load)}>
@@ -109,7 +193,9 @@ export function DoctorAgenda() {
         </div>
         {detail ? (
           <Card>
-            <h2>Resumo de {detail.patientName}</h2>
+            <h2 ref={summaryHeading} tabIndex={-1}>
+              Resumo de {detail.patientName}
+            </h2>
             <p>
               {dateLabel(detail.date)} • {detail.time}
             </p>

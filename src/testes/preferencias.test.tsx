@@ -7,6 +7,7 @@ import { Provider } from "../estado";
 import { Configuracoes } from "../paginas/Configuracoes";
 import { Login } from "../paginas/Autenticacao";
 import { Doctors } from "../paginas/Agendamento";
+import { service } from "../servicos/api";
 import { Field } from "../componentes/interface";
 beforeEach(() => {
   localStorage.clear();
@@ -17,6 +18,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
 });
@@ -76,11 +78,28 @@ it("tolera preferências inválidas e remove a sessão da antiga demonstração"
     expect(sessionStorage.getItem("clinai:session")).toBeNull(),
   );
 });
-it("não oferece entrada simulada nem coleta senha sem autenticação real", () => {
+it("mantém o login padrão com aviso quando a integração está indisponível", () => {
   mount(<Login />);
-  expect(screen.getByText("Acesso indisponível no momento")).toBeTruthy();
-  expect(screen.queryByLabelText("Senha")).toBeNull();
+  expect(screen.getByLabelText("E-mail")).toBeTruthy();
+  expect(screen.getByLabelText("Senha")).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Entrar" })).toBeTruthy();
+  expect(screen.getByRole("link", { name: "Esqueci minha senha" })).toBeTruthy();
+  expect(screen.getByRole("alert").textContent).toContain("serviço de acesso está indisponível");
+  expect(screen.queryByRole("link", { name: "Consultar profissionais" })).toBeNull();
   expect(screen.queryByText(/Entrar na demonstração/)).toBeNull();
+});
+it("mostra a falha do serviço dentro do formulário e preserva os campos", async () => {
+  const user = userEvent.setup();
+  const login = vi.spyOn(service, "login").mockRejectedValue(new Error("Não foi possível conectar ao serviço."));
+  mount(<Login />);
+  await user.type(screen.getByLabelText("E-mail"), "paciente@example.com");
+  await user.type(screen.getByLabelText("Senha"), "senha123");
+  await user.click(screen.getByRole("button", { name: "Entrar" }));
+  await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("Não foi possível conectar ao serviço."));
+  expect(login).toHaveBeenCalledWith("paciente@example.com", "senha123", "patient");
+  expect((screen.getByLabelText("E-mail") as HTMLInputElement).value).toBe("paciente@example.com");
+  expect((screen.getByLabelText("Senha") as HTMLInputElement).type).toBe("password");
+  expect((screen.getByRole("button", { name: "Entrar" }) as HTMLButtonElement).disabled).toBe(false);
 });
 it("exibe médicos reais sem avaliações e preços fictícios", async () => {
   vi.stubGlobal(
